@@ -12,17 +12,8 @@
         extend: {
           fontFamily: { sans: ['Cairo', 'sans-serif'] },
           colors: {
-            coffee: {
-              900: '#1a110a', // Deep espresso
-              800: '#2c1e16', // Dark roast
-              700: '#3d2a1f', // Medium roast
-              600: '#5a3d2b', 
-            },
-            gold: {
-              400: '#fbbf24',
-              500: '#f59e0b',
-              600: '#d97706',
-            }
+            coffee: { 900: '#1a110a', 800: '#2c1e16', 700: '#3d2a1f', 600: '#5a3d2b' },
+            gold: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' }
           }
         }
       }
@@ -32,12 +23,9 @@
     body { background-color: #1a110a; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* Custom thin scrollbar for dashboard */
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #d97706; border-radius: 10px; }
-    
     .fade-in { animation: fadeIn 0.3s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -62,9 +50,7 @@
             class="w-full bg-coffee-900/50 border border-coffee-600 rounded-xl px-4 py-3.5 text-center text-white focus:outline-none focus:border-gold-500 transition shadow-inner" dir="ltr">
         </div>
         <p id="login-error" class="text-red-400 text-sm hidden font-bold bg-red-900/20 py-2 rounded-lg border border-red-900/50"></p>
-        <button type="submit" class="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-coffee-900 font-bold py-3.5 rounded-xl transition shadow-lg shadow-gold-900/40 text-lg">
-          تسجيل الدخول
-        </button>
+        <button type="submit" class="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-coffee-900 font-bold py-3.5 rounded-xl transition shadow-lg shadow-gold-900/40 text-lg">تسجيل الدخول</button>
       </form>
     </div>
   </div>
@@ -72,6 +58,7 @@
   <!-- ==================== MAIN APP ==================== -->
   <div id="main-app" class="hidden min-h-screen flex flex-col max-w-md mx-auto bg-coffee-900 shadow-2xl overflow-hidden relative">
     
+    <!-- App Header -->
     <header class="bg-coffee-800/80 backdrop-blur-md sticky top-0 z-30 border-b border-coffee-700">
       <div class="px-5 py-4 flex justify-between items-center">
         <div class="flex items-center gap-2">
@@ -85,66 +72,66 @@
         </div>
       </div>
       
+      <!-- Custom Tabs -->
       <div class="flex px-4 py-2 gap-2 overflow-x-auto no-scrollbar">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-gold-500 text-coffee-900 transition flex items-center justify-center gap-1.5 shadow-md min-w-[90px]"><span class="text-lg">📊</span> الرئيسية</button>
-        <button onclick="switchTab('inventory')" id="tab-inventory" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center justify-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]"><span class="text-lg">📦</span> المخزون</button>
-        <button onclick="switchTab('orders')" id="tab-orders" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center justify-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]"><span class="text-lg">🛍️</span> الطلبات</button>
-        <button onclick="switchTab('users')" id="tab-users" class="hidden flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition items-center justify-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]"><span class="text-lg">👥</span> الفريق</button>
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-gold-500 text-coffee-900 transition flex items-center gap-1.5 shadow-md min-w-[90px]">📊 الرئيسية</button>
+        <button onclick="switchTab('inventory')" id="tab-inventory" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">📦 المخزون</button>
+        <button onclick="switchTab('orders')" id="tab-orders" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">🛍️ الطلبات</button>
+        <button onclick="switchTab('customers')" id="tab-customers" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">👥 العملاء</button>
+        <button onclick="switchTab('users')" id="tab-users" class="hidden flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">⚙️ الفريق</button>
       </div>
     </header>
 
     <main class="flex-1 overflow-y-auto p-4 pb-20">
       
+      <!-- 1. DASHBOARD VIEW -->
       <section id="view-dashboard" class="block space-y-5 fade-in">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-lg font-black text-white">نظرة عامة</h2>
+          <select id="dash-time-filter" onchange="renderDashboard()" class="bg-coffee-900 border border-coffee-600 text-gold-400 text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none">
+            <option value="all">كل الأوقات</option>
+            <option value="today">اليوم</option>
+            <option value="month">الشهر الحالي</option>
+            <option value="year">السنة الحالية</option>
+          </select>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
-          <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-5 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
-            <div class="absolute -right-4 -top-4 w-16 h-16 bg-gold-500/10 rounded-full blur-xl"></div>
-            <span class="text-gray-400 text-xs font-bold mb-2 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span> إجمالي المبيعات</span>
+          <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-4 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
+            <span class="text-gray-400 text-xs font-bold mb-2">إجمالي المبيعات (التي تم توصيلها)</span>
             <div class="flex items-baseline gap-1">
-              <span class="text-2xl font-black text-white" id="dash-total-revenue">0</span>
-              <span class="text-xs font-bold text-gold-500">ج.م</span>
+              <span class="text-xl font-black text-white" id="dash-total-revenue">0</span>
+              <span class="text-[10px] font-bold text-gold-500">ج.م</span>
             </div>
           </div>
-          
-          <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-5 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
-             <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
-            <span class="text-gray-400 text-xs font-bold mb-2 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> عدد الأوردرات</span>
+          <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-4 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
+            <span class="text-gray-400 text-xs font-bold mb-2">الطلبات (غير المرتجعة)</span>
             <div class="flex items-baseline gap-1">
-              <span class="text-2xl font-black text-white" id="dash-total-orders">0</span>
-              <span class="text-xs font-bold text-blue-400">طلب</span>
+              <span class="text-xl font-black text-white" id="dash-total-orders">0</span>
+              <span class="text-[10px] font-bold text-blue-400">طلب</span>
             </div>
           </div>
         </div>
 
         <div class="bg-coffee-800 p-5 rounded-2xl border border-red-900/30 shadow-lg relative overflow-hidden">
           <div class="absolute left-0 top-0 w-1 h-full bg-red-500"></div>
-          <h3 class="font-bold text-red-400 mb-4 flex items-center gap-2 text-sm">
-            <span class="bg-red-500/20 p-1.5 rounded-lg text-red-500">⚠️</span> نواقص المخزون (أقل من 5)
-          </h3>
-          <div id="dash-low-stock" class="space-y-3">
-          </div>
-        </div>
-
-        <div class="bg-coffee-800 p-5 rounded-2xl border border-coffee-700 shadow-lg mt-5">
-          <h3 class="font-bold text-gold-400 mb-4 flex items-center gap-2 text-sm">
-            <span>📋</span> ملخص الطلبات 
-          </h3>
-          <div id="dash-recent-orders" class="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-          </div>
+          <h3 class="font-bold text-red-400 mb-4 flex items-center gap-2 text-sm"><span class="bg-red-500/20 p-1.5 rounded-lg text-red-500">⚠️</span> نواقص المخزون (أقل من 5)</h3>
+          <div id="dash-low-stock" class="space-y-3"></div>
         </div>
       </section>
 
+      <!-- 2. INVENTORY VIEW -->
       <section id="view-inventory" class="hidden fade-in">
         <div class="mb-5 flex justify-between items-end">
           <div>
             <h2 class="text-xl font-black text-white mb-1">المخزون الحالي</h2>
-            <p class="text-xs text-gold-400/70 font-semibold">للقراءة فقط - يُحدث آلياً مع الطلبات</p>
+            <p class="text-xs text-gold-400/70 font-semibold">تحديث الكميات يتم آلياً</p>
           </div>
         </div>
-        <div id="inventory-list" class="space-y-4">
-        </div>
+        <div id="inventory-list" class="space-y-4"></div>
       </section>
 
+      <!-- 3. ORDERS VIEW -->
       <section id="view-orders" class="hidden fade-in">
         <div class="flex justify-between items-center mb-5">
           <h2 class="text-xl font-black text-white">سجل الطلبات</h2>
@@ -152,26 +139,35 @@
             <span class="text-lg leading-none">+</span> أوردر جديد
           </button>
         </div>
-        <div id="orders-list" class="space-y-4 pb-6">
-          <div class="text-center py-12 text-coffee-600 font-bold text-sm" id="empty-orders">لا توجد طلبات مسجلة حتى الآن ☕</div>
-        </div>
+        <div id="orders-list" class="space-y-4 pb-6"></div>
       </section>
 
+      <!-- 4. CUSTOMERS VIEW -->
+      <section id="view-customers" class="hidden fade-in">
+        <div class="mb-5">
+          <h2 class="text-xl font-black text-white mb-1">قاعدة العملاء</h2>
+          <p class="text-xs text-gold-400/70 font-semibold">إحصائيات العملاء والتواصل السريع</p>
+        </div>
+        <div id="customers-list" class="space-y-3 pb-6"></div>
+      </section>
+
+      <!-- 5. USERS VIEW (Admin Only) -->
       <section id="view-users" class="hidden fade-in">
         <div class="mb-5">
-          <h2 class="text-xl font-black text-white mb-1">إدارة فريق العمل</h2>
-          <p class="text-xs text-gold-400/70 font-semibold">إضافة أرقام الموظفين (الباسورد هو رقم الموبايل)</p>
+          <h2 class="text-xl font-black text-white mb-1">فريق العمل</h2>
+          <p class="text-xs text-gold-400/70 font-semibold">إضافة الموظفين وتحديد أكوادهم</p>
         </div>
-        
-        <form onsubmit="addUser(event)" class="flex gap-2 mb-6">
-          <input type="tel" id="new-user-phone" placeholder="رقم الموبايل (مثال: 01xxxxxxxxx)" required class="flex-1 bg-coffee-800 border border-coffee-600 text-white rounded-xl px-4 py-3 text-sm focus:border-gold-500 focus:outline-none" dir="ltr">
-          <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl text-sm font-bold shadow-lg transition whitespace-nowrap">إضافة</button>
+        <form onsubmit="addUser(event)" class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 mb-6 space-y-3">
+          <input type="text" id="new-user-name" placeholder="اسم الموظف (مثال: أحمد)" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+          <div class="flex gap-2">
+            <input type="text" id="new-user-code" placeholder="الكود (مثال: M1)" required class="w-1/3 bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none text-center">
+            <input type="tel" id="new-user-phone" placeholder="رقم الموبايل" required class="w-2/3 bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none text-left" dir="ltr">
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg transition">إضافة الموظف</button>
         </form>
-
         <div class="bg-coffee-800 rounded-2xl border border-coffee-700 shadow-md overflow-hidden">
           <div class="px-4 py-3 bg-coffee-900/50 border-b border-coffee-700 font-bold text-sm text-gold-400">قائمة الصلاحيات</div>
-          <div id="users-list" class="divide-y divide-coffee-700/50">
-          </div>
+          <div id="users-list" class="divide-y divide-coffee-700/50"></div>
         </div>
       </section>
 
@@ -181,53 +177,43 @@
   <!-- ==================== ADD/EDIT ORDER MODAL ==================== -->
   <div id="order-modal" class="fixed inset-0 z-50 bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-end items-center p-0 transition-opacity">
     <div class="bg-coffee-800 w-full max-w-md rounded-t-[2rem] p-6 shadow-2xl border-t border-coffee-700 max-h-[90vh] overflow-y-auto fade-in">
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex justify-between items-center mb-6 border-b border-coffee-700/50 pb-4">
         <h3 id="order-modal-title" class="text-xl font-black text-white">تسجيل أوردر جديد</h3>
         <button onclick="closeOrderModal()" class="w-8 h-8 bg-coffee-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/20 transition text-lg">&times;</button>
       </div>
-      
       <form id="add-order-form" onsubmit="submitOrder(event)" class="space-y-4">
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-gold-400/80 mb-1.5">اسم العميل</label>
-            <input type="text" id="ord-name" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600" placeholder="مثال: أحمد محمد">
+            <input type="text" id="ord-name" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-gold-400/80 mb-1.5">رقم الموبايل</label>
-            <input type="tel" id="ord-phone" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600" dir="ltr" placeholder="01xxxxxxxxx">
+            <input type="tel" id="ord-phone" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600" dir="ltr">
           </div>
         </div>
-        
         <div>
           <label class="block text-xs font-bold text-gold-400/80 mb-1.5">المحافظة والعنوان</label>
-          <input type="text" id="ord-address" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600" placeholder="المدينة، الشارع، رقم العمارة">
+          <input type="text" id="ord-address" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600">
         </div>
-
         <div>
           <label class="block text-xs font-bold text-gold-400/80 mb-1.5">منفذ البيع</label>
           <select id="ord-channel" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none">
-            <option value="فيس بوك">فيس بوك</option>
-            <option value="إنستجرام">إنستجرام</option>
-            <option value="تيك توك">تيك توك</option>
-            <option value="نون">نون</option>
-            <option value="أمازون">أمازون</option>
-            <option value="جوميا">جوميا</option>
+            <option value="فيس بوك">فيس بوك</option><option value="إنستجرام">إنستجرام</option>
+            <option value="تيك توك">تيك توك</option><option value="نون">نون</option>
+            <option value="أمازون">أمازون</option><option value="جوميا">جوميا</option>
             <option value="جملة">جملة</option>
           </select>
         </div>
-
         <div class="bg-coffee-900/50 p-4 rounded-2xl border border-coffee-700/50 space-y-4">
           <div>
             <label class="block text-xs font-bold text-gold-400 mb-1.5">المنتج المطلوب</label>
-            <select id="ord-product" onchange="updateVariants()" required class="w-full bg-coffee-800 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none">
-            </select>
+            <select id="ord-product" onchange="updateVariants()" required class="w-full bg-coffee-800 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none"></select>
           </div>
-
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-gold-400 mb-1.5">اللون / الموديل</label>
-              <select id="ord-variant" required class="w-full bg-coffee-800 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none">
-              </select>
+              <select id="ord-variant" required class="w-full bg-coffee-800 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none"></select>
             </div>
             <div>
               <label class="block text-xs font-bold text-gold-400 mb-1.5">الكمية</label>
@@ -235,25 +221,22 @@
             </div>
           </div>
         </div>
-
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-gold-400/80 mb-1.5">سعر بيع القطعة (ج.م)</label>
             <input type="number" id="ord-price" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-center">
           </div>
           <div>
-            <label class="block text-xs font-bold text-gold-400/80 mb-1.5">مصاريف الشحن (ج.م)</label>
+            <label class="block text-xs font-bold text-gold-400/80 mb-1.5">الشحن (ج.م)</label>
             <input type="number" id="ord-shipping" required value="0" class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-center">
           </div>
         </div>
-
-        <button type="submit" id="submit-order-btn" class="w-full bg-gold-500 hover:bg-gold-400 text-coffee-900 font-black py-4 rounded-xl mt-4 shadow-lg shadow-gold-500/20 transition text-base">
-          تأكيد وحفظ الأوردر
-        </button>
+        <button type="submit" id="submit-order-btn" class="w-full bg-gold-500 hover:bg-gold-400 text-coffee-900 font-black py-4 rounded-xl mt-4 shadow-lg shadow-gold-500/20 transition text-base">تأكيد وحفظ الأوردر</button>
       </form>
     </div>
   </div>
 
+  <!-- Loading / Toast / Confirm -->
   <div id="loading-overlay" class="fixed inset-0 z-[999] bg-coffee-900/80 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity">
     <div class="w-16 h-16 border-4 border-coffee-700 border-t-gold-500 rounded-full animate-spin mb-4 shadow-lg shadow-gold-500/20"></div>
     <p class="text-gold-400 font-black animate-pulse text-lg tracking-wider drop-shadow-md">جاري المعالجة...</p>
@@ -263,6 +246,7 @@
     <span id="toast-icon">✅</span> <span id="toast-msg">تمت العملية بنجاح</span>
   </div>
 
+  <!-- Delete Confirm Modal -->
   <div id="confirm-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
     <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-red-900/50 text-center fade-in">
       <div class="w-16 h-16 bg-red-500/20 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 border border-red-500/30">⚠️</div>
@@ -275,10 +259,52 @@
     </div>
   </div>
 
+  <!-- User Action Modal (Delete User) -->
+  <div id="user-action-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
+    <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-red-900/50 text-center fade-in">
+      <div class="w-16 h-16 bg-red-500/20 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 border border-red-500/30">⚠️</div>
+      <h3 class="text-xl font-black text-white mb-2">حذف موظف</h3>
+      <p class="text-gray-400 text-sm mb-6">هل أنت متأكد من حذف هذا الموظف نهائياً؟</p>
+      <div class="flex gap-3">
+        <button onclick="window.closeUserModal()" class="flex-1 bg-coffee-700 hover:bg-coffee-600 text-white font-bold py-3 rounded-xl transition border border-coffee-600">إلغاء</button>
+        <button onclick="window.executeDeleteUser()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-red-900/50">نعم، احذف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="edit-user-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
+    <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-coffee-700 fade-in">
+      <h3 class="text-xl font-black text-white mb-4">تعديل بيانات الموظف</h3>
+      <form id="edit-user-form" onsubmit="window.submitEditUser(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-400 mb-1.5">اسم الموظف</label>
+          <input type="text" id="edit-user-name" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none">
+        </div>
+        <div class="flex gap-2">
+          <div class="w-1/3">
+            <label class="block text-xs font-bold text-gray-400 mb-1.5">الكود</label>
+            <input type="text" id="edit-user-code" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-center">
+          </div>
+          <div class="w-2/3">
+            <label class="block text-xs font-bold text-gray-400 mb-1.5">رقم الموبايل</label>
+            <input type="tel" id="edit-user-phone" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-left" dir="ltr">
+          </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="window.closeEditUserModal()" class="flex-1 bg-coffee-700 hover:bg-coffee-600 text-white font-bold py-3.5 rounded-xl transition border border-coffee-600 text-sm">إلغاء</button>
+          <button type="submit" class="flex-1 bg-gold-500 hover:bg-gold-400 text-coffee-900 font-bold py-3.5 rounded-xl transition shadow-lg text-sm">حفظ التعديلات</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, set, push, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // --- Firebase Config ---
     const firebaseConfig = {
       apiKey: "AIzaSyDcyGIPEA_iCsU3wBkvKKE7RKhT73SiuPA",
       authDomain: "caffinity-5cdb7.firebaseapp.com",
@@ -293,8 +319,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // --- Data State ---
     const mainAdminPhone = '01223913314';
-    let currentUser = { phone: null, role: null };
+    let currentUser = { phone: null, role: null, name: null, code: null };
     
     const defaultProducts = [
       { id: 'p1', name: 'الصاروخ كاباديلي (Capadeli)', cost: 2127.51, variants: [{ name: 'رمادي معدني', stock: 15 }] },
@@ -306,38 +333,32 @@
     let products = [];
     let orders = [];
     let systemUsers = {};
-    let editingOrderId = null; 
+    let editingOrderId = null;
+    let orderToDeleteId = null;
+    let userToDeletePhone = null;
 
     let isInitialOrdersLoad = true;
     let knownOrderIds = new Set();
-    let isInitialInvLoad = true;
-    let prevStockMap = {};
     window.isLocalAction = false; 
 
-    function showLoading() { document.getElementById('loading-overlay').classList.replace('hidden', 'flex'); }
-    function hideLoading() { document.getElementById('loading-overlay').classList.replace('flex', 'hidden'); }
-
-    function showToast(msg, isError = false) {
+    // --- Core UI Utilities ---
+    window.showLoading = () => document.getElementById('loading-overlay').classList.replace('hidden', 'flex');
+    window.hideLoading = () => document.getElementById('loading-overlay').classList.replace('flex', 'hidden');
+    
+    window.showToast = (msg, isError = false) => {
       const toast = document.getElementById('toast');
       document.getElementById('toast-msg').innerText = msg;
       document.getElementById('toast-icon').innerText = isError ? '⚠️' : '✅';
       toast.classList.remove('opacity-0', 'translate-y-4');
       toast.classList.add('opacity-100', 'translate-y-0');
-      if (isError) toast.classList.replace('bg-coffee-700', 'bg-red-600');
-      else toast.classList.replace('bg-red-600', 'bg-coffee-700');
+      toast.className = `fixed bottom-4 left-1/2 -translate-x-1/2 text-white px-4 py-2 rounded-full text-sm font-bold shadow-xl transition-all duration-300 pointer-events-none z-[100] border flex items-center gap-2 ${isError ? 'bg-red-600 border-red-500' : 'bg-coffee-700 border-coffee-600'}`;
       setTimeout(() => {
         toast.classList.remove('opacity-100', 'translate-y-0');
         toast.classList.add('opacity-0', 'translate-y-4');
       }, 3000);
     }
 
-    function sendAppNotification(title, body) {
-      showToast(title + " - " + body);
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, { body: body, icon: '☕' });
-      }
-    }
-
+    // --- Authentication ---
     window.handleLogin = async function(e) {
       e.preventDefault();
       const phone = document.getElementById('login-phone').value.trim();
@@ -345,26 +366,21 @@
       const errorMsg = document.getElementById('login-error');
       errorMsg.classList.add('hidden');
       
-      if (phone !== pass && phone !== mainAdminPhone) {
-        errorMsg.innerText = "رقم الموبايل أو كلمة المرور غير صحيحة";
-        errorMsg.classList.remove('hidden');
-        return;
-      }
-
       showLoading();
 
       try {
         const userSnapshot = await get(ref(db, `users/${phone}`));
-        
-        if (userSnapshot.exists()) {
-          currentUser = { phone: phone, role: userSnapshot.val().role };
+        if (userSnapshot.exists() && phone === pass) {
+          const ud = userSnapshot.val();
+          currentUser = { phone, role: ud.role, name: ud.name || 'غير محدد', code: ud.code || 'N/A' };
           loginSuccess();
         } else if (phone === mainAdminPhone && pass === mainAdminPhone) {
-          await set(ref(db, `users/${mainAdminPhone}`), { role: 'admin' });
-          currentUser = { phone: mainAdminPhone, role: 'admin' };
+          const ud = { role: 'admin', name: 'المدير', code: 'M1' };
+          await set(ref(db, `users/${mainAdminPhone}`), ud);
+          currentUser = { phone, ...ud };
           loginSuccess();
         } else {
-          errorMsg.innerText = "هذا الرقم غير مصرح له بالدخول. تواصل مع الإدارة.";
+          errorMsg.innerText = "بيانات الدخول غير صحيحة أو غير مصرح لك.";
           errorMsg.classList.remove('hidden');
           hideLoading();
         }
@@ -381,7 +397,7 @@
       document.getElementById('main-app').classList.remove('hidden');
       
       const badge = document.getElementById('user-badge');
-      badge.innerText = currentUser.role === 'admin' ? 'Admin 👑' : 'Staff 👤';
+      badge.innerText = currentUser.role === 'admin' ? `Admin 👑 (${currentUser.name})` : `Staff 👤 (${currentUser.name})`;
       badge.classList.remove('hidden');
 
       if (currentUser.role === 'admin') {
@@ -389,13 +405,8 @@
       } else {
         document.getElementById('tab-users').classList.replace('flex', 'hidden');
       }
-
-      if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-        Notification.requestPermission();
-      }
-
       initApp();
-      switchTab('dashboard');
+      window.switchTab('dashboard');
     }
 
     window.logout = function() {
@@ -403,11 +414,11 @@
       document.getElementById('main-app').classList.add('hidden');
       document.getElementById('login-phone').value = '';
       document.getElementById('login-pass').value = '';
-      currentUser = { phone: null, role: null };
-      document.getElementById('user-badge').classList.add('hidden');
+      currentUser = { phone: null, role: null, name: null, code: null };
     };
 
-    const tabs = ['dashboard', 'inventory', 'orders', 'users'];
+    // --- Navigation Tabs ---
+    const tabs = ['dashboard', 'inventory', 'orders', 'customers', 'users'];
     window.switchTab = function(activeTab) {
       tabs.forEach(tab => {
         const view = document.getElementById(`view-${tab}`);
@@ -415,104 +426,93 @@
         if(!view || !btn) return;
 
         if (tab === activeTab) {
-          view.classList.remove('hidden');
-          view.classList.add('block');
+          view.classList.replace('hidden', 'block');
           btn.classList.add('bg-gold-500', 'text-coffee-900', 'shadow-md');
           btn.classList.remove('bg-transparent', 'text-gray-400');
         } else {
-          view.classList.add('hidden');
-          view.classList.remove('block');
+          view.classList.replace('block', 'hidden');
           btn.classList.remove('bg-gold-500', 'text-coffee-900', 'shadow-md');
           btn.classList.add('bg-transparent', 'text-gray-400');
         }
       });
       
-      if(activeTab === 'dashboard') renderDashboard();
-      if(activeTab === 'inventory') renderInventory();
-      if(activeTab === 'orders') renderOrders();
-      if(activeTab === 'users' && currentUser.role === 'admin') renderUsers();
+      if(activeTab === 'dashboard') window.renderDashboard();
+      if(activeTab === 'inventory') window.renderInventory();
+      if(activeTab === 'orders') window.renderOrders();
+      if(activeTab === 'customers') window.renderCustomers();
+      if(activeTab === 'users' && currentUser.role === 'admin') window.renderUsers();
     };
 
+    // --- Firebase Sync ---
     function initApp() {
       onValue(ref(db, 'inventory'), (snapshot) => {
-        if (snapshot.exists()) {
-          products = snapshot.val();
-        } else {
-          set(ref(db, 'inventory'), defaultProducts);
-          products = defaultProducts;
-        }
-
-        if (!isInitialInvLoad) {
-          products.forEach(p => {
-            if (p.variants) {
-              p.variants.forEach(v => {
-                const key = `${p.id}-${v.name}`;
-                const oldStock = prevStockMap[key];
-                if (oldStock !== undefined && v.stock < oldStock && v.stock <= 5 && !window.isLocalAction) {
-                  sendAppNotification('تنبيه نواقص ⚠️', `مخزون ${p.name} (${v.name}) انخفض لـ ${v.stock} قطع!`);
-                }
-                prevStockMap[key] = v.stock;
-              });
-            }
-          });
-        } else {
-          products.forEach(p => {
-            if (p.variants) p.variants.forEach(v => { prevStockMap[`${p.id}-${v.name}`] = v.stock; });
-          });
-          isInitialInvLoad = false;
-        }
-
-        renderInventory();
-        populateProductSelect();
-        renderDashboard();
+        if (snapshot.exists()) { products = snapshot.val(); } 
+        else { set(ref(db, 'inventory'), defaultProducts); products = defaultProducts; }
+        window.renderInventory();
+        window.populateProductSelect();
+        if(document.getElementById('view-dashboard').classList.contains('block')) window.renderDashboard();
       });
 
       onValue(ref(db, 'orders'), (snapshot) => {
         orders = [];
         let newOrdersAdded = [];
-
         if (snapshot.exists()) {
           snapshot.forEach((child) => { 
             const order = { id: child.key, ...child.val() };
             orders.push(order); 
-            
-            if (!isInitialOrdersLoad && !knownOrderIds.has(child.key)) {
-              newOrdersAdded.push(order);
-            }
+            if (!isInitialOrdersLoad && !knownOrderIds.has(child.key)) newOrdersAdded.push(order);
             knownOrderIds.add(child.key);
           });
           orders.reverse(); 
         }
 
-        if (!isInitialOrdersLoad && newOrdersAdded.length > 0 && !window.isLocalAction) {
-          newOrdersAdded.forEach(o => {
-            sendAppNotification('أوردر جديد 🛍️', `تم إضافة طلب جديد لـ ${o.name} - ${o.productName}`);
-          });
+        if (!isInitialOrdersLoad && newOrdersAdded.length > 0 && !window.isLocalAction && Notification.permission === 'granted') {
+           newOrdersAdded.forEach(o => new Notification("أوردر جديد 🛍️", {body: `طلب لـ ${o.name}`}));
         }
 
         isInitialOrdersLoad = false;
         window.isLocalAction = false; 
 
-        renderOrders();
-        renderDashboard();
+        if(document.getElementById('view-orders').classList.contains('block')) window.renderOrders();
+        if(document.getElementById('view-dashboard').classList.contains('block')) window.renderDashboard();
+        if(document.getElementById('view-customers').classList.contains('block')) window.renderCustomers();
       });
 
       if (currentUser.role === 'admin') {
         onValue(ref(db, 'users'), (snapshot) => {
           if (snapshot.exists()) {
             systemUsers = snapshot.val();
-            if (document.getElementById('view-users').classList.contains('block')) {
-              renderUsers();
-            }
+            if (document.getElementById('view-users').classList.contains('block')) window.renderUsers();
           }
         });
       }
     }
 
-    function renderDashboard() {
-      document.getElementById('dash-total-orders').innerText = orders.length;
+    // --- Dashboard & Performance Filters ---
+    function getStartTime(filterId) {
+      const filter = document.getElementById(filterId).value;
+      const now = new Date();
+      if (filter === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      if (filter === 'month') return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      if (filter === 'year') return new Date(now.getFullYear(), 0, 1).getTime();
+      return 0;
+    }
+
+    window.renderDashboard = function() {
+      const startTime = getStartTime('dash-time-filter');
+      const filteredOrders = startTime > 0 ? orders.filter(o => o.timestamp && o.timestamp >= startTime) : orders;
+
+      let validOrdersCount = 0;
       let totalRevenue = 0;
-      orders.forEach(o => { totalRevenue += (o.price * o.qty) + o.shipping; });
+      
+      filteredOrders.forEach(o => { 
+        if (o.status !== 'returned') {
+          validOrdersCount++;
+          if(o.status === 'delivered') totalRevenue += (o.price * o.qty) + o.shipping;
+        }
+      });
+      
+      document.getElementById('dash-total-orders').innerText = validOrdersCount;
       document.getElementById('dash-total-revenue').innerText = totalRevenue.toLocaleString('en-US');
 
       const lowStockContainer = document.getElementById('dash-low-stock');
@@ -520,150 +520,188 @@
       let hasLowStock = false;
 
       products.forEach(p => {
-        if(!p.variants) return;
-        p.variants.forEach(v => {
+        if(p.variants) p.variants.forEach(v => {
           if (v.stock < 5) {
             hasLowStock = true;
             lowStockContainer.innerHTML += `
               <div class="flex justify-between items-center bg-coffee-900/50 p-3 rounded-xl border border-red-900/50">
-                <div>
-                  <span class="font-bold text-gray-200 text-sm block">${p.name}</span>
-                  <span class="text-xs text-gray-400">اللون: <span class="text-white">${v.name}</span></span>
-                </div>
+                <div><span class="font-bold text-gray-200 text-sm block">${p.name}</span><span class="text-xs text-gray-400">اللون: ${v.name}</span></div>
                 <span class="bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-black">${v.stock} فقط</span>
-              </div>
-            `;
+              </div>`;
           }
         });
       });
-
-      if (!hasLowStock) { lowStockContainer.innerHTML = `<div class="text-gold-500 text-sm font-bold p-2 text-center bg-coffee-900/30 rounded-xl">المخزون آمن حالياً ✨</div>`; }
-      
-      const recentOrdersContainer = document.getElementById('dash-recent-orders');
-      recentOrdersContainer.innerHTML = '';
-      if (orders.length === 0) {
-        recentOrdersContainer.innerHTML = `<div class="text-gray-500 text-xs font-bold text-center py-6">لا توجد طلبات مسجلة بعد</div>`;
-      } else {
-        orders.forEach(o => {
-          const itemTotal = (o.price * o.qty) + o.shipping;
-          recentOrdersContainer.innerHTML += `
-            <div class="bg-coffee-900/50 p-3 rounded-xl border border-coffee-700/50 flex justify-between items-center transition hover:bg-coffee-900">
-              <div class="overflow-hidden flex-1">
-                <span class="font-bold text-gray-200 text-sm block truncate">${o.name}</span>
-                <span class="text-xs text-gray-400 truncate block mt-0.5">${o.productName} <span class="text-gold-500 font-black">x${o.qty}</span></span>
-              </div>
-              <div class="text-left shrink-0 ml-3 flex flex-col items-end">
-                <span class="font-black text-gold-500 text-sm block">${itemTotal.toLocaleString('en-US')} ج</span>
-                <span class="text-[10px] bg-coffee-700 text-gray-300 px-1.5 py-0.5 rounded mt-1">${o.channel}</span>
-              </div>
-            </div>
-          `;
-        });
-      }
+      if (!hasLowStock) lowStockContainer.innerHTML = `<div class="text-gold-500 text-sm font-bold p-2 text-center bg-coffee-900/30 rounded-xl">المخزون آمن حالياً ✨</div>`;
     }
 
-    function renderInventory() {
-      const list = document.getElementById('inventory-list');
-      list.innerHTML = '';
-      
-      products.forEach(p => {
-        let variantsHTML = '';
-        if(p.variants) {
-          p.variants.forEach(v => {
-            let isLow = v.stock < 5;
-            let stockClass = isLow ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-coffee-900 text-gold-400 border-coffee-600';
-            variantsHTML += `
-              <div class="flex justify-between items-center py-2.5 border-b border-coffee-700/50 last:border-0">
-                <span class="text-sm font-bold text-gray-300 flex items-center gap-2">
-                  <span class="w-1.5 h-1.5 rounded-full ${isLow ? 'bg-red-500 animate-pulse' : 'bg-gold-500'}"></span>
-                  ${v.name}
-                </span>
-                <span class="text-xs font-black ${stockClass} border px-3 py-1 rounded-lg shadow-inner">${v.stock}</span>
-              </div>
-            `;
-          });
-        }
+    window.renderCustomers = function() {
+      const customersMap = {};
+      orders.forEach(o => {
+        if(o.status === 'returned') return;
+        if (!customersMap[o.phone]) customersMap[o.phone] = { name: o.name, orders: 0, spent: 0 };
+        customersMap[o.phone].orders++;
+        if(o.status === 'delivered') customersMap[o.phone].spent += (o.price * o.qty) + o.shipping;
+      });
 
-        list.innerHTML += `
-          <div class="bg-coffee-800 p-5 rounded-2xl border border-coffee-700 shadow-md">
-            <h3 class="font-black text-white mb-1 truncate text-base">${p.name}</h3>
-            <p class="text-xs text-gray-400 mb-4 font-semibold">التكلفة: <span class="text-gold-400">${p.cost} ج.م</span></p>
-            <div class="bg-coffee-900/40 rounded-xl p-1 px-3 border border-coffee-700/50">
-              ${variantsHTML}
+      const container = document.getElementById('customers-list');
+      container.innerHTML = '';
+      if(Object.keys(customersMap).length === 0) {
+        container.innerHTML = '<div class="text-center py-6 text-gray-500 text-sm font-bold">لا يوجد عملاء بعد.</div>'; return;
+      }
+
+      Object.entries(customersMap).forEach(([phone, data]) => {
+        container.innerHTML += `
+          <div class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 shadow-md flex justify-between items-center">
+            <div>
+              <div class="font-bold text-white text-sm mb-0.5">${data.name}</div>
+              <div class="text-xs text-gold-400 font-mono" dir="ltr">${phone}</div>
+              <div class="text-[10px] text-gray-400 mt-1">طلبات: <span class="font-bold text-gray-200">${data.orders}</span> | مدفوعات: <span class="font-bold text-gray-200">${data.spent} ج</span></div>
             </div>
-          </div>
-        `;
+            <a href="https://wa.me/2${phone}" target="_blank" class="bg-green-600/20 text-green-500 border border-green-600/30 p-2 rounded-xl hover:bg-green-600 hover:text-white transition">💬 واتساب</a>
+          </div>`;
       });
     }
 
-    function renderUsers() {
+    // --- Users Management (Admin) ---
+    window.renderUsers = function() {
       const list = document.getElementById('users-list');
       list.innerHTML = '';
-      
       for (const [phone, data] of Object.entries(systemUsers)) {
-        const isAdmin = data.role === 'admin';
         list.innerHTML += `
           <div class="p-4 flex justify-between items-center">
             <div>
-              <div class="font-bold text-gray-200 text-sm" dir="ltr">${phone}</div>
-              <div class="text-xs ${isAdmin ? 'text-gold-500' : 'text-emerald-400'} font-semibold">${isAdmin ? 'مدير النظام (Admin)' : 'موظف (Staff)'}</div>
+              <div class="font-bold text-gray-200 text-sm">${data.name} <span class="text-[10px] bg-coffee-900 border border-coffee-700 px-1 rounded ml-1 text-gold-400">${data.code}</span></div>
+              <div class="text-xs text-gray-400 font-mono" dir="ltr">${phone} - ${data.role === 'admin'?'مدير':'موظف'}</div>
             </div>
-            ${phone !== mainAdminPhone ? `
-              <button onclick="window.removeUser('${phone}')" class="text-xs bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white border border-red-900/50 px-3 py-1.5 rounded-lg transition shadow">حذف</button>
-            ` : '<span class="text-xs text-coffee-600 font-bold">المالك</span>'}
-          </div>
-        `;
+            ${phone !== mainAdminPhone ? `<div class="flex gap-2">
+              <button onclick="window.openEditUserModal('${phone}')" class="text-xs bg-coffee-700 text-gray-300 border border-coffee-600 px-3 py-1.5 rounded-lg hover:bg-gold-500 hover:text-coffee-900 transition shadow">تعديل ✏️</button>
+              <button onclick="window.promptDeleteUser('${phone}')" class="text-xs bg-red-900/30 text-red-400 border border-red-900/50 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition shadow">حذف 🗑️</button>
+            </div>` : ''}
+          </div>`;
       }
     }
 
     window.addUser = async function(e) {
       e.preventDefault();
       const phone = document.getElementById('new-user-phone').value.trim();
-      if(phone.length < 10) { showToast('رقم الموبايل غير صحيح', true); return; }
-      if(systemUsers[phone]) { showToast('المستخدم موجود بالفعل', true); return; }
-
-      showLoading();
+      const name = document.getElementById('new-user-name').value.trim();
+      const code = document.getElementById('new-user-code').value.trim();
+      if(systemUsers[phone]) { window.showToast('رقم الموبايل موجود بالفعل', true); return; }
+      
+      window.showLoading();
       try {
-        await set(ref(db, `users/${phone}`), { role: 'staff' });
+        await set(ref(db, `users/${phone}`), { role: 'staff', name, code });
         document.getElementById('new-user-phone').value = '';
-        hideLoading();
-        showToast('تمت إضافة الموظف بنجاح');
-      } catch (err) {
-        hideLoading();
-        showToast('خطأ أثناء إضافة المستخدم', true);
-      }
+        document.getElementById('new-user-name').value = '';
+        document.getElementById('new-user-code').value = '';
+        window.hideLoading();
+        window.showToast('تمت إضافة الموظف بنجاح');
+      } catch (err) { window.hideLoading(); window.showToast('خطأ أثناء الإضافة', true); }
     };
 
-    window.removeUser = async function(phone) {
-      if(confirm(`هل أنت متأكد من حذف الموظف ${phone}؟`)) {
-        showLoading();
-        try {
-          await remove(ref(db, `users/${phone}`));
-          hideLoading();
-          showToast('تم حذف الموظف');
-        } catch (err) {
-          hideLoading();
-          showToast('خطأ أثناء الحذف', true);
+    window.promptDeleteUser = function(phone) {
+      userToDeletePhone = phone;
+      document.getElementById('user-action-modal').classList.remove('hidden');
+      document.getElementById('user-action-modal').classList.add('flex');
+    }
+    
+    window.closeUserModal = function() {
+      userToDeletePhone = null;
+      document.getElementById('user-action-modal').classList.add('hidden');
+      document.getElementById('user-action-modal').classList.remove('flex');
+    }
+    
+    window.executeDeleteUser = async function() {
+      if(!userToDeletePhone) return;
+      const phoneToDelete = userToDeletePhone;
+      window.closeUserModal();
+      window.showLoading();
+      try {
+        await remove(ref(db, `users/${phoneToDelete}`));
+        window.hideLoading();
+        window.showToast('تم حذف الموظف بنجاح 🗑️');
+      } catch (err) { 
+        window.hideLoading(); 
+        window.showToast('خطأ أثناء الحذف', true); 
+      }
+    }
+
+    let editingUserPhone = null;
+
+    window.openEditUserModal = function(phone) {
+      const user = systemUsers[phone];
+      if (!user) return;
+      editingUserPhone = phone;
+      document.getElementById('edit-user-name').value = user.name || '';
+      document.getElementById('edit-user-code').value = user.code || '';
+      document.getElementById('edit-user-phone').value = phone;
+      document.getElementById('edit-user-modal').classList.replace('hidden', 'flex');
+    }
+
+    window.closeEditUserModal = function() {
+      editingUserPhone = null;
+      document.getElementById('edit-user-modal').classList.replace('flex', 'hidden');
+    }
+
+    window.submitEditUser = async function(e) {
+      e.preventDefault();
+      if (!editingUserPhone) return;
+
+      const newName = document.getElementById('edit-user-name').value.trim();
+      const newCode = document.getElementById('edit-user-code').value.trim();
+      const newPhone = document.getElementById('edit-user-phone').value.trim();
+      
+      window.showLoading();
+      try {
+        const oldRole = systemUsers[editingUserPhone].role;
+        if (newPhone !== editingUserPhone) {
+          // التأكد أن الرقم الجديد غير مستخدم
+          if (systemUsers[newPhone]) {
+            window.hideLoading();
+            window.showToast('رقم الموبايل الجديد مسجل بالفعل!', true);
+            return;
+          }
+          await set(ref(db, `users/${newPhone}`), { role: oldRole, name: newName, code: newCode });
+          await remove(ref(db, `users/${editingUserPhone}`));
+        } else {
+          // تحديث البيانات بدون تغيير الرقم
+          await set(ref(db, `users/${editingUserPhone}`), { role: oldRole, name: newName, code: newCode });
         }
+        window.hideLoading();
+        window.showToast('تم تعديل بيانات الموظف بنجاح ✨');
+        window.closeEditUserModal();
+      } catch (err) {
+        window.hideLoading();
+        window.showToast('حدث خطأ أثناء التعديل', true);
       }
-    };
+    }
 
-    window.openOrderModal = function() {
-      editingOrderId = null;
-      document.getElementById('order-modal-title').innerText = 'تسجيل أوردر جديد';
-      document.getElementById('submit-order-btn').innerText = 'تأكيد وحفظ الأوردر';
-      document.getElementById('order-modal').classList.remove('hidden');
-      document.getElementById('order-modal').classList.add('flex');
-    };
+    // --- Inventory ---
+    window.renderInventory = function() {
+      const list = document.getElementById('inventory-list');
+      list.innerHTML = '';
+      products.forEach(p => {
+        let variantsHTML = '';
+        if(p.variants) {
+          p.variants.forEach(v => {
+            let isLow = v.stock < 5;
+            variantsHTML += `
+              <div class="flex justify-between items-center py-2.5 border-b border-coffee-700/50 last:border-0">
+                <span class="text-sm font-bold text-gray-300 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full ${isLow?'bg-red-500 animate-pulse':'bg-gold-500'}"></span>${v.name}</span>
+                <span class="text-xs font-black ${isLow?'bg-red-500/20 text-red-400 border-red-500/30':'bg-coffee-900 text-gold-400 border-coffee-600'} border px-3 py-1 rounded-lg">${v.stock}</span>
+              </div>`;
+          });
+        }
+        list.innerHTML += `
+          <div class="bg-coffee-800 p-5 rounded-2xl border border-coffee-700 shadow-md">
+            <h3 class="font-black text-white mb-1 text-base">${p.name}</h3>
+            <p class="text-[10px] text-gray-400 mb-3 font-semibold">التكلفة: <span class="text-gold-400">${p.cost} ج.م</span></p>
+            <div class="bg-coffee-900/40 rounded-xl p-1 px-3 border border-coffee-700/50">${variantsHTML}</div>
+          </div>`;
+      });
+    }
 
-    window.closeOrderModal = function() {
-      editingOrderId = null;
-      document.getElementById('order-modal').classList.add('hidden');
-      document.getElementById('order-modal').classList.remove('flex');
-      document.getElementById('add-order-form').reset();
-    };
-
-    function populateProductSelect() {
+    window.populateProductSelect = function() {
       const select = document.getElementById('ord-product');
       select.innerHTML = '<option value="" disabled selected>-- اختر المنتج --</option>';
       products.forEach(p => { select.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
@@ -673,7 +711,6 @@
       const prodId = document.getElementById('ord-product').value;
       const vSelect = document.getElementById('ord-variant');
       vSelect.innerHTML = '';
-      
       const prod = products.find(p => p.id === prodId);
       if (prod && prod.variants) {
         prod.variants.forEach(v => {
@@ -684,14 +721,25 @@
       }
     };
 
+    // --- Orders CRUD ---
+    window.openOrderModal = function() {
+      editingOrderId = null;
+      document.getElementById('order-modal-title').innerText = 'تسجيل أوردر جديد';
+      document.getElementById('submit-order-btn').innerText = 'تأكيد وحفظ الأوردر';
+      document.getElementById('order-modal').classList.replace('hidden', 'flex');
+    };
+    window.closeOrderModal = function() {
+      editingOrderId = null;
+      document.getElementById('order-modal').classList.replace('flex', 'hidden');
+      document.getElementById('add-order-form').reset();
+    };
+
     window.editOrder = function(orderId) {
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
-      
       editingOrderId = orderId;
       document.getElementById('order-modal-title').innerText = 'تعديل الأوردر';
       document.getElementById('submit-order-btn').innerText = 'حفظ التعديلات';
-      
       document.getElementById('ord-name').value = order.name;
       document.getElementById('ord-phone').value = order.phone;
       document.getElementById('ord-address').value = order.address;
@@ -700,20 +748,16 @@
       document.getElementById('ord-price').value = order.price;
       document.getElementById('ord-shipping').value = order.shipping || 0;
       
-      const prodSelect = document.getElementById('ord-product');
       let targetProd = products.find(p => p.id === order.productId) || products.find(p => p.name === order.productName);
       if (targetProd) {
-        prodSelect.value = targetProd.id;
+        document.getElementById('ord-product').value = targetProd.id;
         window.updateVariants(order.variantName);
       }
-      
-      document.getElementById('order-modal').classList.remove('hidden');
-      document.getElementById('order-modal').classList.add('flex');
+      document.getElementById('order-modal').classList.replace('hidden', 'flex');
     };
 
     window.submitOrder = function(e) {
       e.preventDefault();
-      
       const prodId = document.getElementById('ord-product').value;
       const variantName = document.getElementById('ord-variant').value;
       const qty = parseInt(document.getElementById('ord-qty').value);
@@ -725,105 +769,121 @@
       if (!variant) return;
 
       let clonedProducts = JSON.parse(JSON.stringify(products));
-      
+      let isChangingFromReturned = false;
+
       if (editingOrderId) {
         const oldOrder = orders.find(o => o.id === editingOrderId);
         let oldProd = clonedProducts.find(p => p.id === oldOrder.productId) || clonedProducts.find(p => p.name === oldOrder.productName);
-        if(oldProd) {
+        if(oldProd && oldOrder.status !== 'returned') { // If it was returned, it didn't hold stock
            let oldVariant = oldProd.variants.find(v => v.name === oldOrder.variantName);
            if(oldVariant) oldVariant.stock += parseInt(oldOrder.qty);
         }
+        if(oldOrder.status === 'returned') isChangingFromReturned = true; 
       }
 
       const targetVariant = clonedProducts.find(p => p.id === prodId).variants.find(v => v.name === variantName);
-      
       if (targetVariant.stock < qty) {
-        showToast(`عفواً، المتاح بعد التعديل (${targetVariant.stock}) أقل من المطلوب`, true);
-        return;
+        window.showToast(`المخزون المتاح بعد التعديل (${targetVariant.stock}) غير كافٍ`, true); return;
       }
       
-      showLoading();
+      window.showLoading();
       window.isLocalAction = true; 
 
       setTimeout(async () => {
         try {
-          targetVariant.stock -= qty;
+          targetVariant.stock -= qty; // Deduct stock
           await set(ref(db, 'inventory'), clonedProducts);
 
-          const newOrderData = {
+          const orderData = {
             name: document.getElementById('ord-name').value,
             phone: document.getElementById('ord-phone').value,
             address: document.getElementById('ord-address').value,
-            productId: prod.id,
-            productName: prod.name,
-            variantName: variantName,
-            qty: qty,
-            price: price,
-            shipping: shipping,
+            productId: prod.id, productName: prod.name, variantName,
+            qty, price, shipping,
             channel: document.getElementById('ord-channel').value,
-            date: editingOrderId ? orders.find(o=>o.id === editingOrderId).date : new Date().toLocaleDateString('ar-EG')
           };
-          
+
           if (editingOrderId) {
-            await set(ref(db, `orders/${editingOrderId}`), newOrderData);
-            showToast('تم تعديل الأوردر بنجاح! ✨');
+            const oldOrder = orders.find(o => o.id === editingOrderId);
+            orderData.date = oldOrder.date;
+            orderData.timestamp = oldOrder.timestamp;
+            orderData.status = isChangingFromReturned ? 'pending' : oldOrder.status; // Reset status if it was returned
+            orderData.addedByPhone = oldOrder.addedByPhone || currentUser.phone;
+            orderData.addedByName = oldOrder.addedByName || currentUser.name;
+            orderData.addedByCode = oldOrder.addedByCode || currentUser.code;
+            await set(ref(db, `orders/${editingOrderId}`), orderData);
+            window.showToast('تم تعديل الأوردر بنجاح');
           } else {
-            await push(ref(db, 'orders'), newOrderData);
-            showToast('تم تسجيل الأوردر بنجاح! ✨');
+            orderData.date = new Date().toLocaleDateString('ar-EG');
+            orderData.timestamp = new Date().getTime();
+            orderData.status = 'pending';
+            orderData.addedByPhone = currentUser.phone;
+            orderData.addedByName = currentUser.name;
+            orderData.addedByCode = currentUser.code;
+            await push(ref(db, 'orders'), orderData);
+            window.showToast('تم تسجيل الأوردر بنجاح');
           }
-          
-          hideLoading();
-          window.closeOrderModal();
-        } catch (error) {
-          hideLoading();
-          showToast('حدث خطأ في الاتصال بالسيرفر', true);
-        }
-      }, 1000);
+          window.hideLoading(); window.closeOrderModal();
+        } catch (error) { window.hideLoading(); window.showToast('حدث خطأ في الاتصال', true); }
+      }, 800);
     };
 
-    let orderToDeleteId = null;
+    window.updateOrderStatus = async function(orderId, newStatus, currentStatus) {
+      if(newStatus === currentStatus) return;
+      
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      let clonedProducts = JSON.parse(JSON.stringify(products));
+      let prod = clonedProducts.find(p => p.id === order.productId) || clonedProducts.find(p => p.name === order.productName);
+      let variant = prod ? prod.variants.find(v => v.name === order.variantName) : null;
+      
+      // Stock logic for Returns
+      if (newStatus === 'returned' && currentStatus !== 'returned') {
+        if(variant) variant.stock += parseInt(order.qty); // Restore stock
+      } else if (currentStatus === 'returned' && newStatus !== 'returned') {
+        if(variant) {
+          if (variant.stock < order.qty) { window.showToast('المخزون غير كافٍ لإرجاع حالة الأوردر!', true); window.renderOrders(); return; }
+          variant.stock -= parseInt(order.qty); // Deduct stock again
+        }
+      }
+
+      window.showLoading();
+      window.isLocalAction = true;
+      try {
+        await set(ref(db, 'inventory'), clonedProducts);
+        await set(ref(db, `orders/${orderId}/status`), newStatus);
+        window.hideLoading();
+        window.showToast('تم تحديث حالة الأوردر');
+      } catch (e) { window.hideLoading(); window.showToast('خطأ أثناء التحديث', true); window.renderOrders(); }
+    };
 
     window.confirmDelete = function(orderId) {
       orderToDeleteId = orderId;
-      document.getElementById('confirm-modal').classList.remove('hidden');
-      document.getElementById('confirm-modal').classList.add('flex');
+      document.getElementById('confirm-modal').classList.replace('hidden', 'flex');
     };
-
-    window.cancelDelete = function() {
-      orderToDeleteId = null;
-      document.getElementById('confirm-modal').classList.add('hidden');
-      document.getElementById('confirm-modal').classList.remove('flex');
-    };
-
-    window.executeDelete = function() {
+    window.cancelDelete = () => { orderToDeleteId = null; document.getElementById('confirm-modal').classList.replace('flex', 'hidden'); };
+    
+    window.executeDelete = async function() {
       const orderId = orderToDeleteId;
       window.cancelDelete();
-      if (!orderId) return;
-
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
       
-      showLoading();
-      window.isLocalAction = true; 
-
-      setTimeout(async () => {
-        try {
-          let prod = products.find(p => p.id === order.productId) || products.find(p => p.name === order.productName);
-          if (prod && prod.variants) {
-            const variant = prod.variants.find(v => v.name === order.variantName);
-            if (variant) variant.stock += parseInt(order.qty) || 0;
-          }
-
-          await set(ref(db, 'inventory'), products);
-          await remove(ref(db, `orders/${orderId}`));
-          
-          hideLoading();
-          showToast('تم المسح واسترجاع المخزون بنجاح 🗑️');
-        } catch (error) {
-          hideLoading();
-          showToast('حدث خطأ أثناء المسح', true);
+      window.showLoading();
+      window.isLocalAction = true;
+      try {
+        if (order.status !== 'returned') {
+           let prod = products.find(p => p.id === order.productId) || products.find(p => p.name === order.productName);
+           if (prod && prod.variants) {
+             const variant = prod.variants.find(v => v.name === order.variantName);
+             if (variant) variant.stock += parseInt(order.qty) || 0;
+           }
+           await set(ref(db, 'inventory'), products);
         }
-      }, 800);
+        await remove(ref(db, `orders/${orderId}`));
+        window.hideLoading(); window.showToast('تم مسح الأوردر بنجاح');
+      } catch (error) { window.hideLoading(); window.showToast('خطأ أثناء المسح', true); }
     };
 
     window.copyToBosta = function(orderId) {
@@ -833,43 +893,52 @@
       const textToCopy = `الاسم: ${order.name}\nالموبايل: ${order.phone}\nالعنوان: ${order.address}\nالمنتج: ${order.qty}x ${order.productName} (${order.variantName})\nالمطلوب تحصيله: ${total} ج.م\nملاحظات: ${order.channel}`;
       const textArea = document.createElement("textarea");
       textArea.value = textToCopy;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        showToast('تم نسخ بيانات الشحن بنجاح 📋');
-      } catch (err) {
-        showToast('فشل النسخ', true);
-      }
+      document.body.appendChild(textArea); textArea.select();
+      try { document.execCommand('copy'); window.showToast('تم النسخ لبوسطة 📋'); } 
+      catch (err) { window.showToast('فشل النسخ', true); }
       document.body.removeChild(textArea);
     };
 
-    function renderOrders() {
+    window.renderOrders = function() {
       const list = document.getElementById('orders-list');
       if (orders.length === 0) {
-        list.innerHTML = '<div class="text-center py-12 text-coffee-600 font-bold text-sm">لا توجد طلبات مسجلة حتى الآن ☕</div>';
-        return;
+        list.innerHTML = '<div class="text-center py-12 text-coffee-600 font-bold text-sm">لا توجد طلبات مسجلة ☕</div>'; return;
       }
       
       list.innerHTML = '';
-      
+      const isAdmin = currentUser.role === 'admin';
+
       orders.forEach(o => {
         const itemTotal = (o.price * o.qty) + o.shipping;
+        const status = o.status || 'pending';
         
-        const isAdmin = currentUser.role === 'admin';
+        let statusColor = 'bg-gray-600 text-white';
+        if(status === 'pending') statusColor = 'bg-gold-500 text-coffee-900';
+        if(status === 'shipped') statusColor = 'bg-blue-500 text-white';
+        if(status === 'delivered') statusColor = 'bg-emerald-500 text-white';
+        if(status === 'returned') statusColor = 'bg-red-600 text-white';
+        
         const actionButtons = isAdmin ? `
-          <button onclick="window.editOrder('${o.id}')" class="bg-coffee-700 hover:bg-gold-500 hover:text-coffee-900 text-gray-300 border border-coffee-600 text-xs font-bold px-3 py-2 rounded-lg transition shadow">تعديل ✏️</button>
-          <button onclick="window.confirmDelete('${o.id}')" class="bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 text-xs font-bold px-3 py-2 rounded-lg transition shadow">مسح 🗑️</button>
+          <button onclick="window.editOrder('${o.id}')" class="bg-coffee-700 hover:bg-gold-500 hover:text-coffee-900 text-gray-300 border border-coffee-600 text-xs font-bold px-3 py-2 rounded-lg transition">تعديل ✏️</button>
+          <button onclick="window.confirmDelete('${o.id}')" class="bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 text-xs font-bold px-3 py-2 rounded-lg transition">مسح 🗑️</button>
         ` : '';
 
         list.innerHTML += `
-          <div class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 shadow-md">
+          <div class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 shadow-md ${status === 'returned' ? 'opacity-70 grayscale-[30%]' : ''}">
             <div class="flex justify-between items-start mb-3">
               <div>
                 <span class="font-black text-white text-base block">${o.name}</span>
-                <span class="text-xs text-gold-400 font-mono tracking-wider" dir="ltr">${o.phone}</span>
+                <span class="text-xs text-gold-400 font-mono" dir="ltr">${o.phone}</span>
               </div>
-              <span class="text-xs font-bold bg-coffee-900 text-gray-300 px-2 py-1 rounded-lg border border-coffee-600">${o.channel}</span>
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-[10px] font-bold bg-coffee-900 text-gray-300 px-2 py-0.5 rounded-lg border border-coffee-600">${o.channel}</span>
+                <select onchange="window.updateOrderStatus('${o.id}', this.value, '${status}')" class="text-xs font-bold ${statusColor} rounded-md px-1 py-1 focus:outline-none cursor-pointer border-0 mt-1">
+                  <option value="pending" ${status === 'pending' ? 'selected' : ''} class="bg-coffee-800 text-white">⏳ تجهيز</option>
+                  <option value="shipped" ${status === 'shipped' ? 'selected' : ''} class="bg-coffee-800 text-white">🚚 شحن</option>
+                  <option value="delivered" ${status === 'delivered' ? 'selected' : ''} class="bg-coffee-800 text-white">✅ توصيل</option>
+                  <option value="returned" ${status === 'returned' ? 'selected' : ''} class="bg-coffee-800 text-red-400">❌ مرتجع</option>
+                </select>
+              </div>
             </div>
             
             <p class="text-sm text-gray-300 mb-4 bg-coffee-900/50 p-2 rounded-lg border border-coffee-700/50">${o.address}</p>
@@ -880,20 +949,19 @@
                 <span class="font-black text-white bg-coffee-700 px-2 rounded">x${o.qty}</span>
               </div>
               <span class="text-xs text-gray-400 block mb-2">اللون: ${o.variantName}</span>
-              <div class="flex gap-4 text-xs text-gray-400 font-semibold">
-                <span>القطعة: ${o.price}</span>
+              <div class="flex justify-between text-[10px] text-gray-400 font-semibold border-t border-coffee-700/50 pt-2">
+                <span>سعر القطعة: ${o.price}</span>
                 <span>الشحن: ${o.shipping}</span>
+                <span>بواسطة: ${o.addedByCode || 'N/A'}</span>
               </div>
             </div>
             
             <div class="flex justify-between items-center pt-3 border-t border-coffee-700 mt-2 gap-2 flex-wrap">
-              <span class="font-black text-gold-500 text-lg ml-auto">${itemTotal.toLocaleString('en-US')} <span class="text-xs">ج.م</span></span>
-              
+              <span class="font-black ${status === 'returned' ? 'text-gray-500 line-through' : 'text-gold-500'} text-lg ml-auto">${itemTotal.toLocaleString('en-US')} <span class="text-[10px]">ج</span></span>
               <button onclick="window.copyToBosta('${o.id}')" class="bg-coffee-700 hover:bg-coffee-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow">بوسطة 📋</button>
               ${actionButtons}
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
   </script>
