@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Caffinity - نظام الإدارة</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Cairo', 'sans-serif'] },
+          colors: {
+            coffee: {
+              900: '#1a110a', // Deep espresso
+              800: '#2c1e16', // Dark roast
+              700: '#3d2a1f', // Medium roast
+              600: '#5a3d2b', 
+            },
+            gold: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #1a110a; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Custom thin scrollbar for dashboard */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #d97706; border-radius: 10px; }
+    
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="text-gray-200 antialiased selection:bg-gold-500 selection:text-white">
+
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="login-screen" class="fixed inset-0 z-50 bg-coffee-900 flex flex-col justify-center items-center p-6">
+    <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-8 shadow-2xl border border-coffee-700 text-center relative overflow-hidden">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-gold-600 rounded-full blur-[70px] opacity-20"></div>
+      <div class="w-16 h-16 bg-gradient-to-br from-gold-400 to-gold-600 rounded-2xl mx-auto flex items-center justify-center text-4xl mb-4 shadow-lg shadow-gold-900/50 border border-gold-400/30 relative z-10">☕</div>
+      <h1 class="text-4xl font-black text-white mb-2 tracking-widest drop-shadow-md relative z-10">CAFFINITY</h1>
+      <p class="text-gold-400/80 text-sm mb-8 font-medium relative z-10 mt-2">نظام إدارة المبيعات والمخزون</p>
+      
+      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5 relative z-10">
+        <div>
+          <input type="tel" id="login-phone" placeholder="رقم الموبايل" required autocomplete="off"
+            class="w-full bg-coffee-900/50 border border-coffee-600 rounded-xl px-4 py-3.5 text-center text-white focus:outline-none focus:border-gold-500 transition shadow-inner" dir="ltr">
+        </div>
+        <div>
+          <input type="password" id="login-pass" placeholder="كلمة المرور" required autocomplete="new-password"
+            class="w-full bg-coffee-900/50 border border-coffee-600 rounded-xl px-4 py-3.5 text-center text-white focus:outline-none focus:border-gold-500 transition shadow-inner" dir="ltr">
+        </div>
+        <p id="login-error" class="text-red-400 text-sm hidden font-bold bg-red-900/20 py-2 rounded-lg border border-red-900/50"></p>
+        <button type="submit" class="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-coffee-900 font-bold py-3.5 rounded-xl transition shadow-lg shadow-gold-900/40 text-lg">
+          تسجيل الدخول
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APP ==================== -->
+  <div id="main-app" class="hidden min-h-screen flex flex-col max-w-md mx-auto bg-coffee-900 shadow-2xl overflow-hidden relative">
+    
+    <header class="bg-coffee-800/80 backdrop-blur-md sticky top-0 z-30 border-b border-coffee-700">
+      <div class="px-5 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="text-xl font-black text-white tracking-widest drop-shadow-md flex items-center gap-1.5">
+            <span class="text-gold-500 text-2xl">☕</span> CAFFINITY
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="user-badge" class="text-[10px] font-bold bg-gold-500/20 text-gold-400 px-2 py-1 rounded border border-gold-500/30 hidden"></span>
+          <button onclick="logout()" class="text-xs font-bold bg-coffee-700/50 px-3 py-1.5 rounded-lg text-gray-300 hover:bg-coffee-700 transition border border-coffee-600/50">خروج</button>
+        </div>
+      </div>
+      
+      <div class="flex px-4 py-2 gap-2 overflow-x-auto no-scrollbar">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-gold-500 text-coffee-900 transition flex items-center justify-center gap-1.5 shadow-md min-w-[90px]"><span class="text-lg">📊</span> الرئيسية</button>
+        <button onclick="switchTab('inventory')" id="tab-inventory" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center justify-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]"><span class="text-lg">📦</span> المخزون</button>
+        <button onclick="switchTab('orders')" id="tab-orders" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center justify-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]"><span class="text-lg">🛍️</span> الطلبات</button>
+        <button onclick="switchTab('users')" id="tab-users" class="hidden flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition items-center justify-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]"><span class="text-lg">👥</span> الفريق</button>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 pb-20">
+      
+      <section id="view-dashboard" class="block space-y-5 fade-in">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-5 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
+            <div class="absolute -right-4 -top-4 w-16 h-16 bg-gold-500/10 rounded-full blur-xl"></div>
+            <span class="text-gray-400 text-xs font-bold mb-2 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span> إجمالي المبيعات</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-black text-white" id="dash-total-revenue">0</span>
+              <span class="text-xs font-bold text-gold-500">ج.م</span>
+            </div>
+          </div>
+          
+          <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-5 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
+             <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
+            <span class="text-gray-400 text-xs font-bold mb-2 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> عدد الأوردرات</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-black text-white" id="dash-total-orders">0</span>
+              <span class="text-xs font-bold text-blue-400">طلب</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-coffee-800 p-5 rounded-2xl border border-red-900/30 shadow-lg relative overflow-hidden">
+          <div class="absolute left-0 top-0 w-1 h-full bg-red-500"></div>
+          <h3 class="font-bold text-red-400 mb-4 flex items-center gap-2 text-sm">
+            <span class="bg-red-500/20 p-1.5 rounded-lg text-red-500">⚠️</span> نواقص المخزون (أقل من 5)
+          </h3>
+          <div id="dash-low-stock" class="space-y-3">
+          </div>
+        </div>
+
+        <div class="bg-coffee-800 p-5 rounded-2xl border border-coffee-700 shadow-lg mt-5">
+          <h3 class="font-bold text-gold-400 mb-4 flex items-center gap-2 text-sm">
+            <span>📋</span> ملخص الطلبات 
+          </h3>
+          <div id="dash-recent-orders" class="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+          </div>
+        </div>
+      </section>
+
+      <section id="view-inventory" class="hidden fade-in">
+        <div class="mb-5 flex justify-between items-end">
+          <div>
+            <h2 class="text-xl font-black text-white mb-1">المخزون الحالي</h2>
+            <p class="text-xs text-gold-400/70 font-semibold">للقراءة فقط - يُحدث آلياً مع الطلبات</p>
+          </div>
+        </div>
+        <div id="inventory-list" class="space-y-4">
+        </div>
+      </section>
+
+      <section id="view-orders" class="hidden fade-in">
+        <div class="flex justify-between items-center mb-5">
+          <h2 class="text-xl font-black text-white">سجل الطلبات</h2>
+          <button onclick="openOrderModal()" class="bg-gold-500 hover:bg-gold-400 text-coffee-900 px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition flex items-center gap-1.5">
+            <span class="text-lg leading-none">+</span> أوردر جديد
+          </button>
+        </div>
+        <div id="orders-list" class="space-y-4 pb-6">
+          <div class="text-center py-12 text-coffee-600 font-bold text-sm" id="empty-orders">لا توجد طلبات مسجلة حتى الآن ☕</div>
+        </div>
+      </section>
+
+      <section id="view-users" class="hidden fade-in">
+        <div class="mb-5">
+          <h2 class="text-xl font-black text-white mb-1">إدارة فريق العمل</h2>
+          <p class="text-xs text-gold-400/70 font-semibold">إضافة أرقام الموظفين (الباسورد هو رقم الموبايل)</p>
+        </div>
+        
+        <form onsubmit="addUser(event)" class="flex gap-2 mb-6">
+          <input type="tel" id="new-user-phone" placeholder="رقم الموبايل (مثال: 01xxxxxxxxx)" required class="flex-1 bg-coffee-800 border border-coffee-600 text-white rounded-xl px-4 py-3 text-sm focus:border-gold-500 focus:outline-none" dir="ltr">
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl text-sm font-bold shadow-lg transition whitespace-nowrap">إضافة</button>
+        </form>
+
+        <div class="bg-coffee-800 rounded-2xl border border-coffee-700 shadow-md overflow-hidden">
+          <div class="px-4 py-3 bg-coffee-900/50 border-b border-coffee-700 font-bold text-sm text-gold-400">قائمة الصلاحيات</div>
+          <div id="users-list" class="divide-y divide-coffee-700/50">
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==================== ADD/EDIT ORDER MODAL ==================== -->
+  <div id="order-modal" class="fixed inset-0 z-50 bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-end items-center p-0 transition-opacity">
+    <div class="bg-coffee-800 w-full max-w-md rounded-t-[2rem] p-6 shadow-2xl border-t border-coffee-700 max-h-[90vh] overflow-y-auto fade-in">
+      <div class="flex justify-between items-center mb-6">
+        <h3 id="order-modal-title" class="text-xl font-black text-white">تسجيل أوردر جديد</h3>
+        <button onclick="closeOrderModal()" class="w-8 h-8 bg-coffee-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/20 transition text-lg">&times;</button>
+      </div>
+      
+      <form id="add-order-form" onsubmit="submitOrder(event)" class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gold-400/80 mb-1.5">اسم العميل</label>
+            <input type="text" id="ord-name" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600" placeholder="مثال: أحمد محمد">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gold-400/80 mb-1.5">رقم الموبايل</label>
+            <input type="tel" id="ord-phone" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600" dir="ltr" placeholder="01xxxxxxxxx">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-bold text-gold-400/80 mb-1.5">المحافظة والعنوان</label>
+          <input type="text" id="ord-address" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none placeholder-coffee-600" placeholder="المدينة، الشارع، رقم العمارة">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gold-400/80 mb-1.5">منفذ البيع</label>
+          <select id="ord-channel" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none">
+            <option value="فيس بوك">فيس بوك</option>
+            <option value="إنستجرام">إنستجرام</option>
+            <option value="تيك توك">تيك توك</option>
+            <option value="نون">نون</option>
+            <option value="أمازون">أمازون</option>
+            <option value="جوميا">جوميا</option>
+            <option value="جملة">جملة</option>
+          </select>
+        </div>
+
+        <div class="bg-coffee-900/50 p-4 rounded-2xl border border-coffee-700/50 space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gold-400 mb-1.5">المنتج المطلوب</label>
+            <select id="ord-product" onchange="updateVariants()" required class="w-full bg-coffee-800 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none">
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gold-400 mb-1.5">اللون / الموديل</label>
+              <select id="ord-variant" required class="w-full bg-coffee-800 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none appearance-none">
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gold-400 mb-1.5">الكمية</label>
+              <input type="number" id="ord-qty" min="1" value="1" required class="w-full bg-coffee-800 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-center">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gold-400/80 mb-1.5">سعر بيع القطعة (ج.م)</label>
+            <input type="number" id="ord-price" required class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-center">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gold-400/80 mb-1.5">مصاريف الشحن (ج.م)</label>
+            <input type="number" id="ord-shipping" required value="0" class="w-full bg-coffee-900/80 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-center">
+          </div>
+        </div>
+
+        <button type="submit" id="submit-order-btn" class="w-full bg-gold-500 hover:bg-gold-400 text-coffee-900 font-black py-4 rounded-xl mt-4 shadow-lg shadow-gold-500/20 transition text-base">
+          تأكيد وحفظ الأوردر
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="loading-overlay" class="fixed inset-0 z-[999] bg-coffee-900/80 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity">
+    <div class="w-16 h-16 border-4 border-coffee-700 border-t-gold-500 rounded-full animate-spin mb-4 shadow-lg shadow-gold-500/20"></div>
+    <p class="text-gold-400 font-black animate-pulse text-lg tracking-wider drop-shadow-md">جاري المعالجة...</p>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-coffee-700 text-white px-4 py-2 rounded-full text-sm font-bold shadow-xl transition-all duration-300 opacity-0 pointer-events-none z-[100] border border-coffee-600 flex items-center gap-2">
+    <span id="toast-icon">✅</span> <span id="toast-msg">تمت العملية بنجاح</span>
+  </div>
+
+  <div id="confirm-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
+    <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-red-900/50 text-center fade-in">
+      <div class="w-16 h-16 bg-red-500/20 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 border border-red-500/30">⚠️</div>
+      <h3 class="text-xl font-black text-white mb-2">تأكيد المسح</h3>
+      <p class="text-gray-400 text-sm mb-6">هل أنت متأكد من مسح الأوردر؟ سيتم استرجاع الكمية للمخزن تلقائياً.</p>
+      <div class="flex gap-3">
+        <button onclick="window.cancelDelete()" class="flex-1 bg-coffee-700 hover:bg-coffee-600 text-white font-bold py-3 rounded-xl transition border border-coffee-600">إلغاء</button>
+        <button onclick="window.executeDelete()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-red-900/50">نعم، امسح</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, push, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDcyGIPEA_iCsU3wBkvKKE7RKhT73SiuPA",
+      authDomain: "caffinity-5cdb7.firebaseapp.com",
+      databaseURL: "https://caffinity-5cdb7-default-rtdb.firebaseio.com",
+      projectId: "caffinity-5cdb7",
+      storageBucket: "caffinity-5cdb7.firebasestorage.app",
+      messagingSenderId: "756715965620",
+      appId: "1:756715965620:web:47ad20b3ff72acf017dbe1",
+      measurementId: "G-744Y0NBGGE"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const mainAdminPhone = '01223913314';
+    let currentUser = { phone: null, role: null };
+    
+    const defaultProducts = [
+      { id: 'p1', name: 'الصاروخ كاباديلي (Capadeli)', cost: 2127.51, variants: [{ name: 'رمادي معدني', stock: 15 }] },
+      { id: 'p2', name: 'ماكينة كافينتي ME2604', cost: 1045.02, variants: [{ name: 'أحمر', stock: 10 }, { name: 'زيتي', stock: 8 }, { name: 'أسود', stock: 20 }, { name: 'أبيض', stock: 3 }] },
+      { id: 'p3', name: 'المطحنة المانيوال', cost: 1502.03, variants: [{ name: 'دارك جراي', stock: 7 }] },
+      { id: 'p4', name: 'مطحنة ودريب بورتابل', cost: 1706.18, variants: [{ name: 'براون', stock: 12 }] }
+    ];
+
+    let products = [];
+    let orders = [];
+    let systemUsers = {};
+    let editingOrderId = null; 
+
+    let isInitialOrdersLoad = true;
+    let knownOrderIds = new Set();
+    let isInitialInvLoad = true;
+    let prevStockMap = {};
+    window.isLocalAction = false; 
+
+    function showLoading() { document.getElementById('loading-overlay').classList.replace('hidden', 'flex'); }
+    function hideLoading() { document.getElementById('loading-overlay').classList.replace('flex', 'hidden'); }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      document.getElementById('toast-icon').innerText = isError ? '⚠️' : '✅';
+      toast.classList.remove('opacity-0', 'translate-y-4');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      if (isError) toast.classList.replace('bg-coffee-700', 'bg-red-600');
+      else toast.classList.replace('bg-red-600', 'bg-coffee-700');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-4');
+      }, 3000);
+    }
+
+    function sendAppNotification(title, body) {
+      showToast(title + " - " + body);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { body: body, icon: '☕' });
+      }
+    }
+
+    window.handleLogin = async function(e) {
+      e.preventDefault();
+      const phone = document.getElementById('login-phone').value.trim();
+      const pass = document.getElementById('login-pass').value.trim();
+      const errorMsg = document.getElementById('login-error');
+      errorMsg.classList.add('hidden');
+      
+      if (phone !== pass && phone !== mainAdminPhone) {
+        errorMsg.innerText = "رقم الموبايل أو كلمة المرور غير صحيحة";
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      showLoading();
+
+      try {
+        const userSnapshot = await get(ref(db, `users/${phone}`));
+        
+        if (userSnapshot.exists()) {
+          currentUser = { phone: phone, role: userSnapshot.val().role };
+          loginSuccess();
+        } else if (phone === mainAdminPhone && pass === mainAdminPhone) {
+          await set(ref(db, `users/${mainAdminPhone}`), { role: 'admin' });
+          currentUser = { phone: mainAdminPhone, role: 'admin' };
+          loginSuccess();
+        } else {
+          errorMsg.innerText = "هذا الرقم غير مصرح له بالدخول. تواصل مع الإدارة.";
+          errorMsg.classList.remove('hidden');
+          hideLoading();
+        }
+      } catch (err) {
+        errorMsg.innerText = "خطأ في الاتصال بالسيرفر";
+        errorMsg.classList.remove('hidden');
+        hideLoading();
+      }
+    };
+
+    function loginSuccess() {
+      hideLoading();
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+      
+      const badge = document.getElementById('user-badge');
+      badge.innerText = currentUser.role === 'admin' ? 'Admin 👑' : 'Staff 👤';
+      badge.classList.remove('hidden');
+
+      if (currentUser.role === 'admin') {
+        document.getElementById('tab-users').classList.replace('hidden', 'flex');
+      } else {
+        document.getElementById('tab-users').classList.replace('flex', 'hidden');
+      }
+
+      if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+
+      initApp();
+      switchTab('dashboard');
+    }
+
+    window.logout = function() {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('main-app').classList.add('hidden');
+      document.getElementById('login-phone').value = '';
+      document.getElementById('login-pass').value = '';
+      currentUser = { phone: null, role: null };
+      document.getElementById('user-badge').classList.add('hidden');
+    };
+
+    const tabs = ['dashboard', 'inventory', 'orders', 'users'];
+    window.switchTab = function(activeTab) {
+      tabs.forEach(tab => {
+        const view = document.getElementById(`view-${tab}`);
+        const btn = document.getElementById(`tab-${tab}`);
+        if(!view || !btn) return;
+
+        if (tab === activeTab) {
+          view.classList.remove('hidden');
+          view.classList.add('block');
+          btn.classList.add('bg-gold-500', 'text-coffee-900', 'shadow-md');
+          btn.classList.remove('bg-transparent', 'text-gray-400');
+        } else {
+          view.classList.add('hidden');
+          view.classList.remove('block');
+          btn.classList.remove('bg-gold-500', 'text-coffee-900', 'shadow-md');
+          btn.classList.add('bg-transparent', 'text-gray-400');
+        }
+      });
+      
+      if(activeTab === 'dashboard') renderDashboard();
+      if(activeTab === 'inventory') renderInventory();
+      if(activeTab === 'orders') renderOrders();
+      if(activeTab === 'users' && currentUser.role === 'admin') renderUsers();
+    };
+
+    function initApp() {
+      onValue(ref(db, 'inventory'), (snapshot) => {
+        if (snapshot.exists()) {
+          products = snapshot.val();
+        } else {
+          set(ref(db, 'inventory'), defaultProducts);
+          products = defaultProducts;
+        }
+
+        if (!isInitialInvLoad) {
+          products.forEach(p => {
+            if (p.variants) {
+              p.variants.forEach(v => {
+                const key = `${p.id}-${v.name}`;
+                const oldStock = prevStockMap[key];
+                if (oldStock !== undefined && v.stock < oldStock && v.stock <= 5 && !window.isLocalAction) {
+                  sendAppNotification('تنبيه نواقص ⚠️', `مخزون ${p.name} (${v.name}) انخفض لـ ${v.stock} قطع!`);
+                }
+                prevStockMap[key] = v.stock;
+              });
+            }
+          });
+        } else {
+          products.forEach(p => {
+            if (p.variants) p.variants.forEach(v => { prevStockMap[`${p.id}-${v.name}`] = v.stock; });
+          });
+          isInitialInvLoad = false;
+        }
+
+        renderInventory();
+        populateProductSelect();
+        renderDashboard();
+      });
+
+      onValue(ref(db, 'orders'), (snapshot) => {
+        orders = [];
+        let newOrdersAdded = [];
+
+        if (snapshot.exists()) {
+          snapshot.forEach((child) => { 
+            const order = { id: child.key, ...child.val() };
+            orders.push(order); 
+            
+            if (!isInitialOrdersLoad && !knownOrderIds.has(child.key)) {
+              newOrdersAdded.push(order);
+            }
+            knownOrderIds.add(child.key);
+          });
+          orders.reverse(); 
+        }
+
+        if (!isInitialOrdersLoad && newOrdersAdded.length > 0 && !window.isLocalAction) {
+          newOrdersAdded.forEach(o => {
+            sendAppNotification('أوردر جديد 🛍️', `تم إضافة طلب جديد لـ ${o.name} - ${o.productName}`);
+          });
+        }
+
+        isInitialOrdersLoad = false;
+        window.isLocalAction = false; 
+
+        renderOrders();
+        renderDashboard();
+      });
+
+      if (currentUser.role === 'admin') {
+        onValue(ref(db, 'users'), (snapshot) => {
+          if (snapshot.exists()) {
+            systemUsers = snapshot.val();
+            if (document.getElementById('view-users').classList.contains('block')) {
+              renderUsers();
+            }
+          }
+        });
+      }
+    }
+
+    function renderDashboard() {
+      document.getElementById('dash-total-orders').innerText = orders.length;
+      let totalRevenue = 0;
+      orders.forEach(o => { totalRevenue += (o.price * o.qty) + o.shipping; });
+      document.getElementById('dash-total-revenue').innerText = totalRevenue.toLocaleString('en-US');
+
+      const lowStockContainer = document.getElementById('dash-low-stock');
+      lowStockContainer.innerHTML = '';
+      let hasLowStock = false;
+
+      products.forEach(p => {
+        if(!p.variants) return;
+        p.variants.forEach(v => {
+          if (v.stock < 5) {
+            hasLowStock = true;
+            lowStockContainer.innerHTML += `
+              <div class="flex justify-between items-center bg-coffee-900/50 p-3 rounded-xl border border-red-900/50">
+                <div>
+                  <span class="font-bold text-gray-200 text-sm block">${p.name}</span>
+                  <span class="text-xs text-gray-400">اللون: <span class="text-white">${v.name}</span></span>
+                </div>
+                <span class="bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-black">${v.stock} فقط</span>
+              </div>
+            `;
+          }
+        });
+      });
+
+      if (!hasLowStock) { lowStockContainer.innerHTML = `<div class="text-gold-500 text-sm font-bold p-2 text-center bg-coffee-900/30 rounded-xl">المخزون آمن حالياً ✨</div>`; }
+      
+      const recentOrdersContainer = document.getElementById('dash-recent-orders');
+      recentOrdersContainer.innerHTML = '';
+      if (orders.length === 0) {
+        recentOrdersContainer.innerHTML = `<div class="text-gray-500 text-xs font-bold text-center py-6">لا توجد طلبات مسجلة بعد</div>`;
+      } else {
+        orders.forEach(o => {
+          const itemTotal = (o.price * o.qty) + o.shipping;
+          recentOrdersContainer.innerHTML += `
+            <div class="bg-coffee-900/50 p-3 rounded-xl border border-coffee-700/50 flex justify-between items-center transition hover:bg-coffee-900">
+              <div class="overflow-hidden flex-1">
+                <span class="font-bold text-gray-200 text-sm block truncate">${o.name}</span>
+                <span class="text-xs text-gray-400 truncate block mt-0.5">${o.productName} <span class="text-gold-500 font-black">x${o.qty}</span></span>
+              </div>
+              <div class="text-left shrink-0 ml-3 flex flex-col items-end">
+                <span class="font-black text-gold-500 text-sm block">${itemTotal.toLocaleString('en-US')} ج</span>
+                <span class="text-[10px] bg-coffee-700 text-gray-300 px-1.5 py-0.5 rounded mt-1">${o.channel}</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function renderInventory() {
+      const list = document.getElementById('inventory-list');
+      list.innerHTML = '';
+      
+      products.forEach(p => {
+        let variantsHTML = '';
+        if(p.variants) {
+          p.variants.forEach(v => {
+            let isLow = v.stock < 5;
+            let stockClass = isLow ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-coffee-900 text-gold-400 border-coffee-600';
+            variantsHTML += `
+              <div class="flex justify-between items-center py-2.5 border-b border-coffee-700/50 last:border-0">
+                <span class="text-sm font-bold text-gray-300 flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full ${isLow ? 'bg-red-500 animate-pulse' : 'bg-gold-500'}"></span>
+                  ${v.name}
+                </span>
+                <span class="text-xs font-black ${stockClass} border px-3 py-1 rounded-lg shadow-inner">${v.stock}</span>
+              </div>
+            `;
+          });
+        }
+
+        list.innerHTML += `
+          <div class="bg-coffee-800 p-5 rounded-2xl border border-coffee-700 shadow-md">
+            <h3 class="font-black text-white mb-1 truncate text-base">${p.name}</h3>
+            <p class="text-xs text-gray-400 mb-4 font-semibold">التكلفة: <span class="text-gold-400">${p.cost} ج.م</span></p>
+            <div class="bg-coffee-900/40 rounded-xl p-1 px-3 border border-coffee-700/50">
+              ${variantsHTML}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function renderUsers() {
+      const list = document.getElementById('users-list');
+      list.innerHTML = '';
+      
+      for (const [phone, data] of Object.entries(systemUsers)) {
+        const isAdmin = data.role === 'admin';
+        list.innerHTML += `
+          <div class="p-4 flex justify-between items-center">
+            <div>
+              <div class="font-bold text-gray-200 text-sm" dir="ltr">${phone}</div>
+              <div class="text-xs ${isAdmin ? 'text-gold-500' : 'text-emerald-400'} font-semibold">${isAdmin ? 'مدير النظام (Admin)' : 'موظف (Staff)'}</div>
+            </div>
+            ${phone !== mainAdminPhone ? `
+              <button onclick="window.removeUser('${phone}')" class="text-xs bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white border border-red-900/50 px-3 py-1.5 rounded-lg transition shadow">حذف</button>
+            ` : '<span class="text-xs text-coffee-600 font-bold">المالك</span>'}
+          </div>
+        `;
+      }
+    }
+
+    window.addUser = async function(e) {
+      e.preventDefault();
+      const phone = document.getElementById('new-user-phone').value.trim();
+      if(phone.length < 10) { showToast('رقم الموبايل غير صحيح', true); return; }
+      if(systemUsers[phone]) { showToast('المستخدم موجود بالفعل', true); return; }
+
+      showLoading();
+      try {
+        await set(ref(db, `users/${phone}`), { role: 'staff' });
+        document.getElementById('new-user-phone').value = '';
+        hideLoading();
+        showToast('تمت إضافة الموظف بنجاح');
+      } catch (err) {
+        hideLoading();
+        showToast('خطأ أثناء إضافة المستخدم', true);
+      }
+    };
+
+    window.removeUser = async function(phone) {
+      if(confirm(`هل أنت متأكد من حذف الموظف ${phone}؟`)) {
+        showLoading();
+        try {
+          await remove(ref(db, `users/${phone}`));
+          hideLoading();
+          showToast('تم حذف الموظف');
+        } catch (err) {
+          hideLoading();
+          showToast('خطأ أثناء الحذف', true);
+        }
+      }
+    };
+
+    window.openOrderModal = function() {
+      editingOrderId = null;
+      document.getElementById('order-modal-title').innerText = 'تسجيل أوردر جديد';
+      document.getElementById('submit-order-btn').innerText = 'تأكيد وحفظ الأوردر';
+      document.getElementById('order-modal').classList.remove('hidden');
+      document.getElementById('order-modal').classList.add('flex');
+    };
+
+    window.closeOrderModal = function() {
+      editingOrderId = null;
+      document.getElementById('order-modal').classList.add('hidden');
+      document.getElementById('order-modal').classList.remove('flex');
+      document.getElementById('add-order-form').reset();
+    };
+
+    function populateProductSelect() {
+      const select = document.getElementById('ord-product');
+      select.innerHTML = '<option value="" disabled selected>-- اختر المنتج --</option>';
+      products.forEach(p => { select.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
+    }
+
+    window.updateVariants = function(preSelectedVariant = null) {
+      const prodId = document.getElementById('ord-product').value;
+      const vSelect = document.getElementById('ord-variant');
+      vSelect.innerHTML = '';
+      
+      const prod = products.find(p => p.id === prodId);
+      if (prod && prod.variants) {
+        prod.variants.forEach(v => {
+          const disabled = v.stock <= 0 && v.name !== preSelectedVariant ? 'disabled' : '';
+          const selected = v.name === preSelectedVariant ? 'selected' : '';
+          vSelect.innerHTML += `<option value="${v.name}" ${disabled} ${selected}>${v.name} (متاح: ${v.stock})</option>`;
+        });
+      }
+    };
+
+    window.editOrder = function(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+      
+      editingOrderId = orderId;
+      document.getElementById('order-modal-title').innerText = 'تعديل الأوردر';
+      document.getElementById('submit-order-btn').innerText = 'حفظ التعديلات';
+      
+      document.getElementById('ord-name').value = order.name;
+      document.getElementById('ord-phone').value = order.phone;
+      document.getElementById('ord-address').value = order.address;
+      document.getElementById('ord-channel').value = order.channel;
+      document.getElementById('ord-qty').value = order.qty;
+      document.getElementById('ord-price').value = order.price;
+      document.getElementById('ord-shipping').value = order.shipping || 0;
+      
+      const prodSelect = document.getElementById('ord-product');
+      let targetProd = products.find(p => p.id === order.productId) || products.find(p => p.name === order.productName);
+      if (targetProd) {
+        prodSelect.value = targetProd.id;
+        window.updateVariants(order.variantName);
+      }
+      
+      document.getElementById('order-modal').classList.remove('hidden');
+      document.getElementById('order-modal').classList.add('flex');
+    };
+
+    window.submitOrder = function(e) {
+      e.preventDefault();
+      
+      const prodId = document.getElementById('ord-product').value;
+      const variantName = document.getElementById('ord-variant').value;
+      const qty = parseInt(document.getElementById('ord-qty').value);
+      const price = parseFloat(document.getElementById('ord-price').value);
+      const shipping = parseFloat(document.getElementById('ord-shipping').value) || 0;
+      
+      const prod = products.find(p => p.id === prodId);
+      const variant = prod.variants.find(v => v.name === variantName);
+      if (!variant) return;
+
+      let clonedProducts = JSON.parse(JSON.stringify(products));
+      
+      if (editingOrderId) {
+        const oldOrder = orders.find(o => o.id === editingOrderId);
+        let oldProd = clonedProducts.find(p => p.id === oldOrder.productId) || clonedProducts.find(p => p.name === oldOrder.productName);
+        if(oldProd) {
+           let oldVariant = oldProd.variants.find(v => v.name === oldOrder.variantName);
+           if(oldVariant) oldVariant.stock += parseInt(oldOrder.qty);
+        }
+      }
+
+      const targetVariant = clonedProducts.find(p => p.id === prodId).variants.find(v => v.name === variantName);
+      
+      if (targetVariant.stock < qty) {
+        showToast(`عفواً، المتاح بعد التعديل (${targetVariant.stock}) أقل من المطلوب`, true);
+        return;
+      }
+      
+      showLoading();
+      window.isLocalAction = true; 
+
+      setTimeout(async () => {
+        try {
+          targetVariant.stock -= qty;
+          await set(ref(db, 'inventory'), clonedProducts);
+
+          const newOrderData = {
+            name: document.getElementById('ord-name').value,
+            phone: document.getElementById('ord-phone').value,
+            address: document.getElementById('ord-address').value,
+            productId: prod.id,
+            productName: prod.name,
+            variantName: variantName,
+            qty: qty,
+            price: price,
+            shipping: shipping,
+            channel: document.getElementById('ord-channel').value,
+            date: editingOrderId ? orders.find(o=>o.id === editingOrderId).date : new Date().toLocaleDateString('ar-EG')
+          };
+          
+          if (editingOrderId) {
+            await set(ref(db, `orders/${editingOrderId}`), newOrderData);
+            showToast('تم تعديل الأوردر بنجاح! ✨');
+          } else {
+            await push(ref(db, 'orders'), newOrderData);
+            showToast('تم تسجيل الأوردر بنجاح! ✨');
+          }
+          
+          hideLoading();
+          window.closeOrderModal();
+        } catch (error) {
+          hideLoading();
+          showToast('حدث خطأ في الاتصال بالسيرفر', true);
+        }
+      }, 1000);
+    };
+
+    let orderToDeleteId = null;
+
+    window.confirmDelete = function(orderId) {
+      orderToDeleteId = orderId;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+      document.getElementById('confirm-modal').classList.add('flex');
+    };
+
+    window.cancelDelete = function() {
+      orderToDeleteId = null;
+      document.getElementById('confirm-modal').classList.add('hidden');
+      document.getElementById('confirm-modal').classList.remove('flex');
+    };
+
+    window.executeDelete = function() {
+      const orderId = orderToDeleteId;
+      window.cancelDelete();
+      if (!orderId) return;
+
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+      
+      showLoading();
+      window.isLocalAction = true; 
+
+      setTimeout(async () => {
+        try {
+          let prod = products.find(p => p.id === order.productId) || products.find(p => p.name === order.productName);
+          if (prod && prod.variants) {
+            const variant = prod.variants.find(v => v.name === order.variantName);
+            if (variant) variant.stock += parseInt(order.qty) || 0;
+          }
+
+          await set(ref(db, 'inventory'), products);
+          await remove(ref(db, `orders/${orderId}`));
+          
+          hideLoading();
+          showToast('تم المسح واسترجاع المخزون بنجاح 🗑️');
+        } catch (error) {
+          hideLoading();
+          showToast('حدث خطأ أثناء المسح', true);
+        }
+      }, 800);
+    };
+
+    window.copyToBosta = function(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+      const total = (order.price * order.qty) + order.shipping;
+      const textToCopy = `الاسم: ${order.name}\nالموبايل: ${order.phone}\nالعنوان: ${order.address}\nالمنتج: ${order.qty}x ${order.productName} (${order.variantName})\nالمطلوب تحصيله: ${total} ج.م\nملاحظات: ${order.channel}`;
+      const textArea = document.createElement("textarea");
+      textArea.value = textToCopy;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('تم نسخ بيانات الشحن بنجاح 📋');
+      } catch (err) {
+        showToast('فشل النسخ', true);
+      }
+      document.body.removeChild(textArea);
+    };
+
+    function renderOrders() {
+      const list = document.getElementById('orders-list');
+      if (orders.length === 0) {
+        list.innerHTML = '<div class="text-center py-12 text-coffee-600 font-bold text-sm">لا توجد طلبات مسجلة حتى الآن ☕</div>';
+        return;
+      }
+      
+      list.innerHTML = '';
+      
+      orders.forEach(o => {
+        const itemTotal = (o.price * o.qty) + o.shipping;
+        
+        const isAdmin = currentUser.role === 'admin';
+        const actionButtons = isAdmin ? `
+          <button onclick="window.editOrder('${o.id}')" class="bg-coffee-700 hover:bg-gold-500 hover:text-coffee-900 text-gray-300 border border-coffee-600 text-xs font-bold px-3 py-2 rounded-lg transition shadow">تعديل ✏️</button>
+          <button onclick="window.confirmDelete('${o.id}')" class="bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 text-xs font-bold px-3 py-2 rounded-lg transition shadow">مسح 🗑️</button>
+        ` : '';
+
+        list.innerHTML += `
+          <div class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 shadow-md">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="font-black text-white text-base block">${o.name}</span>
+                <span class="text-xs text-gold-400 font-mono tracking-wider" dir="ltr">${o.phone}</span>
+              </div>
+              <span class="text-xs font-bold bg-coffee-900 text-gray-300 px-2 py-1 rounded-lg border border-coffee-600">${o.channel}</span>
+            </div>
+            
+            <p class="text-sm text-gray-300 mb-4 bg-coffee-900/50 p-2 rounded-lg border border-coffee-700/50">${o.address}</p>
+            
+            <div class="mb-4">
+              <div class="flex justify-between items-start mb-1 text-sm">
+                <span class="font-bold text-gold-500 truncate w-3/4">${o.productName}</span>
+                <span class="font-black text-white bg-coffee-700 px-2 rounded">x${o.qty}</span>
+              </div>
+              <span class="text-xs text-gray-400 block mb-2">اللون: ${o.variantName}</span>
+              <div class="flex gap-4 text-xs text-gray-400 font-semibold">
+                <span>القطعة: ${o.price}</span>
+                <span>الشحن: ${o.shipping}</span>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center pt-3 border-t border-coffee-700 mt-2 gap-2 flex-wrap">
+              <span class="font-black text-gold-500 text-lg ml-auto">${itemTotal.toLocaleString('en-US')} <span class="text-xs">ج.م</span></span>
+              
+              <button onclick="window.copyToBosta('${o.id}')" class="bg-coffee-700 hover:bg-coffee-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow">بوسطة 📋</button>
+              ${actionButtons}
+            </div>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
