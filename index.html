@@ -519,7 +519,7 @@
       window.showLoading();
 
       try {
-        // 1. تجهيز بيانات الطلبات (Orders)
+        // 1. تجهيز بيانات الطلبات
         const ordersData = orders.map(o => {
           const statusMap = { 'pending': 'تجهيز', 'shipped': 'شحن', 'delivered': 'توصيل', 'returned': 'مرتجع' };
           return {
@@ -540,7 +540,7 @@
           };
         });
 
-        // 2. تجهيز بيانات المخزون (Inventory)
+        // 2. تجهيز بيانات المخزون
         const invData = [];
         products.forEach(p => {
           if (p.variants) {
@@ -555,7 +555,7 @@
           }
         });
 
-        // 3. تجهيز بيانات العملاء (Customers)
+        // 3. تجهيز بيانات العملاء
         const customersMap = {};
         orders.forEach(o => {
           if(o.status === 'returned') return;
@@ -571,20 +571,21 @@
           "إجمالي المدفوعات (أرباح)": data.spent
         }));
 
-        // إنشاء ملف الإكسيل والتابات
         const wb = XLSX.utils.book_new();
         
-        // تحويل البيانات إلى شيتات
         const wsOrders = XLSX.utils.json_to_sheet(ordersData);
         const wsInventory = XLSX.utils.json_to_sheet(invData);
         const wsCustomers = XLSX.utils.json_to_sheet(custData);
 
-        // إضافة الشيتات للملف
+        // جعل اتجاه الشيتات من اليمين لليسار (RTL) 
+        wsOrders['!dir'] = 'rtl';
+        wsInventory['!dir'] = 'rtl';
+        wsCustomers['!dir'] = 'rtl';
+
         XLSX.utils.book_append_sheet(wb, wsOrders, "سجل الطلبات");
         XLSX.utils.book_append_sheet(wb, wsInventory, "المخزون الحالي");
         XLSX.utils.book_append_sheet(wb, wsCustomers, "بيانات العملاء");
 
-        // تحميل الملف
         const today = new Date().toLocaleDateString('ar-EG').replace(/\//g, '-');
         XLSX.writeFile(wb, `Caffinity_Data_${today}.xlsx`);
         
@@ -617,7 +618,7 @@
       filteredOrders.forEach(o => { 
         if (o.status !== 'returned') {
           validOrdersCount++;
-          if(o.status === 'delivered') totalRevenue += (o.price * o.qty) + o.shipping;
+          if(o.status === 'delivered') totalRevenue += (o.price * o.qty) + (o.shipping || 0);
         }
       });
       
@@ -649,7 +650,7 @@
         if(o.status === 'returned') return;
         if (!customersMap[o.phone]) customersMap[o.phone] = { name: o.name, orders: 0, spent: 0 };
         customersMap[o.phone].orders++;
-        if(o.status === 'delivered') customersMap[o.phone].spent += (o.price * o.qty) + o.shipping;
+        if(o.status === 'delivered') customersMap[o.phone].spent += (o.price * o.qty) + (o.shipping || 0);
       });
 
       const container = document.getElementById('customers-list');
@@ -764,7 +765,6 @@
       try {
         const oldRole = systemUsers[editingUserPhone].role;
         if (newPhone !== editingUserPhone) {
-          // التأكد أن الرقم الجديد غير مستخدم
           if (systemUsers[newPhone]) {
             window.hideLoading();
             window.showToast('رقم الموبايل الجديد مسجل بالفعل!', true);
@@ -773,7 +773,6 @@
           await set(ref(db, `users/${newPhone}`), { role: oldRole, name: newName, code: newCode });
           await remove(ref(db, `users/${editingUserPhone}`));
         } else {
-          // تحديث البيانات بدون تغيير الرقم
           await set(ref(db, `users/${editingUserPhone}`), { role: oldRole, name: newName, code: newCode });
         }
         window.hideLoading();
@@ -884,14 +883,13 @@
       }
     };
 
-    // --- Orders CRUD & UI ---
+    // --- Orders CRUD ---
     window.openOrderModal = function() {
       editingOrderId = null;
       document.getElementById('order-modal-title').innerText = 'تسجيل أوردر جديد';
       document.getElementById('submit-order-btn').innerText = 'تأكيد وحفظ الأوردر';
       document.getElementById('order-modal').classList.replace('hidden', 'flex');
     };
-    
     window.closeOrderModal = function() {
       editingOrderId = null;
       document.getElementById('order-modal').classList.replace('flex', 'hidden');
