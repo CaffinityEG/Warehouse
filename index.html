@@ -28,6 +28,10 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #d97706; border-radius: 10px; }
     .fade-in { animation: fadeIn 0.3s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* إخفاء أسهم حقل الأرقام لتصميم أنظف */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
   </style>
 </head>
 <body class="text-gray-200 antialiased selection:bg-gold-500 selection:text-white">
@@ -122,11 +126,14 @@
 
       <!-- 2. INVENTORY VIEW -->
       <section id="view-inventory" class="hidden fade-in">
-        <div class="mb-5 flex justify-between items-end">
+        <div class="mb-5 flex justify-between items-center">
           <div>
             <h2 class="text-xl font-black text-white mb-1">المخزون الحالي</h2>
-            <p class="text-xs text-gold-400/70 font-semibold">تحديث الكميات يتم آلياً</p>
+            <p class="text-xs text-gold-400/70 font-semibold">تحديث الكميات يتم آلياً أو يدوياً للمدير</p>
           </div>
+          <button id="save-inv-btn" onclick="window.saveInventoryChanges()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-emerald-900/50 transition flex items-center gap-1.5 animate-bounce">
+            <span>💾</span> حفظ التعديلات
+          </button>
         </div>
         <div id="inventory-list" class="space-y-4"></div>
       </section>
@@ -336,6 +343,7 @@
     let editingOrderId = null;
     let orderToDeleteId = null;
     let userToDeletePhone = null;
+    let hasUnsavedInventory = false; // متغير لمراقبة التعديلات اليدوية في المخزون
 
     let isInitialOrdersLoad = true;
     let knownOrderIds = new Set();
@@ -415,6 +423,9 @@
       document.getElementById('login-phone').value = '';
       document.getElementById('login-pass').value = '';
       currentUser = { phone: null, role: null, name: null, code: null };
+      hasUnsavedInventory = false;
+      const saveBtn = document.getElementById('save-inv-btn');
+      if(saveBtn) saveBtn.classList.add('hidden');
     };
 
     // --- Navigation Tabs ---
@@ -448,7 +459,11 @@
       onValue(ref(db, 'inventory'), (snapshot) => {
         if (snapshot.exists()) { products = snapshot.val(); } 
         else { set(ref(db, 'inventory'), defaultProducts); products = defaultProducts; }
-        window.renderInventory();
+        
+        // لا تقم بإعادة رسم المخزون إذا كان المدير يقوم بالتعديل حالياً ولم يحفظ بعد
+        if (!hasUnsavedInventory) {
+          window.renderInventory();
+        }
         window.populateProductSelect();
         if(document.getElementById('view-dashboard').classList.contains('block')) window.renderDashboard();
       });
@@ -655,7 +670,6 @@
       try {
         const oldRole = systemUsers[editingUserPhone].role;
         if (newPhone !== editingUserPhone) {
-          // التأكد أن الرقم الجديد غير مستخدم
           if (systemUsers[newPhone]) {
             window.hideLoading();
             window.showToast('رقم الموبايل الجديد مسجل بالفعل!', true);
@@ -664,7 +678,6 @@
           await set(ref(db, `users/${newPhone}`), { role: oldRole, name: newName, code: newCode });
           await remove(ref(db, `users/${editingUserPhone}`));
         } else {
-          // تحديث البيانات بدون تغيير الرقم
           await set(ref(db, `users/${editingUserPhone}`), { role: oldRole, name: newName, code: newCode });
         }
         window.hideLoading();
@@ -676,19 +689,33 @@
       }
     }
 
-    // --- Inventory ---
+    // --- Inventory & Stock Adjustments ---
     window.renderInventory = function() {
       const list = document.getElementById('inventory-list');
       list.innerHTML = '';
-      products.forEach(p => {
+      const isAdmin = currentUser.role === 'admin';
+
+      products.forEach((p, pIndex) => {
         let variantsHTML = '';
         if(p.variants) {
-          p.variants.forEach(v => {
+          p.variants.forEach((v, vIndex) => {
             let isLow = v.stock < 5;
+            
+            // إذا كان المستخدم مدير، نظهر أزرار الزيادة والنقصان وحقل الإدخال المباشر
+            let stockControl = isAdmin ? `
+              <div class="flex items-center gap-1.5" dir="ltr">
+                <button onclick="window.adjustStock(${pIndex}, ${vIndex}, -1)" class="w-8 h-8 rounded-lg bg-coffee-700 hover:bg-red-600/80 text-white font-black flex items-center justify-center transition border border-coffee-600 shadow active:scale-95 text-base">-</button>
+                <input type="number" min="0" value="${v.stock}" onchange="window.setStockDirectly(${pIndex}, ${vIndex}, this.value)" class="w-14 h-8 text-center text-xs font-black ${isLow?'bg-red-500/20 text-red-400 border-red-500/30':'bg-coffee-900 text-gold-400 border-coffee-600'} border rounded-lg focus:outline-none focus:border-gold-500">
+                <button onclick="window.adjustStock(${pIndex}, ${vIndex}, 1)" class="w-8 h-8 rounded-lg bg-coffee-700 hover:bg-emerald-600/80 text-white font-black flex items-center justify-center transition border border-coffee-600 shadow active:scale-95 text-base">+</button>
+              </div>
+            ` : `
+              <span class="text-xs font-black ${isLow?'bg-red-500/20 text-red-400 border-red-500/30':'bg-coffee-900 text-gold-400 border-coffee-600'} border px-3 py-1 rounded-lg">${v.stock}</span>
+            `;
+
             variantsHTML += `
               <div class="flex justify-between items-center py-2.5 border-b border-coffee-700/50 last:border-0">
                 <span class="text-sm font-bold text-gray-300 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full ${isLow?'bg-red-500 animate-pulse':'bg-gold-500'}"></span>${v.name}</span>
-                <span class="text-xs font-black ${isLow?'bg-red-500/20 text-red-400 border-red-500/30':'bg-coffee-900 text-gold-400 border-coffee-600'} border px-3 py-1 rounded-lg">${v.stock}</span>
+                ${stockControl}
               </div>`;
           });
         }
@@ -700,6 +727,47 @@
           </div>`;
       });
     }
+
+    window.adjustStock = function(pIndex, vIndex, delta) {
+      if (currentUser.role !== 'admin') return;
+      let currentStock = parseInt(products[pIndex].variants[vIndex].stock) || 0;
+      let newStock = currentStock + delta;
+      if (newStock < 0) newStock = 0;
+      
+      products[pIndex].variants[vIndex].stock = newStock;
+      hasUnsavedInventory = true;
+      document.getElementById('save-inv-btn').classList.remove('hidden');
+      window.renderInventory();
+    };
+
+    window.setStockDirectly = function(pIndex, vIndex, val) {
+      if (currentUser.role !== 'admin') return;
+      let newStock = parseInt(val);
+      if (isNaN(newStock) || newStock < 0) newStock = 0;
+      
+      products[pIndex].variants[vIndex].stock = newStock;
+      hasUnsavedInventory = true;
+      document.getElementById('save-inv-btn').classList.remove('hidden');
+      window.renderInventory();
+    };
+
+    window.saveInventoryChanges = async function() {
+      if (currentUser.role !== 'admin') return;
+      window.showLoading();
+      window.isLocalAction = true;
+      try {
+        await set(ref(db, 'inventory'), products);
+        hasUnsavedInventory = false;
+        document.getElementById('save-inv-btn').classList.add('hidden');
+        window.hideLoading();
+        window.showToast('تم حفظ تعديلات المخزون بنجاح 💾');
+        window.populateProductSelect();
+        window.renderDashboard();
+      } catch (err) {
+        window.hideLoading();
+        window.showToast('حدث خطأ أثناء حفظ المخزون', true);
+      }
+    };
 
     window.populateProductSelect = function() {
       const select = document.getElementById('ord-product');
@@ -774,7 +842,7 @@
       if (editingOrderId) {
         const oldOrder = orders.find(o => o.id === editingOrderId);
         let oldProd = clonedProducts.find(p => p.id === oldOrder.productId) || clonedProducts.find(p => p.name === oldOrder.productName);
-        if(oldProd && oldOrder.status !== 'returned') { // If it was returned, it didn't hold stock
+        if(oldProd && oldOrder.status !== 'returned') { 
            let oldVariant = oldProd.variants.find(v => v.name === oldOrder.variantName);
            if(oldVariant) oldVariant.stock += parseInt(oldOrder.qty);
         }
@@ -791,8 +859,11 @@
 
       setTimeout(async () => {
         try {
-          targetVariant.stock -= qty; // Deduct stock
+          targetVariant.stock -= qty; 
           await set(ref(db, 'inventory'), clonedProducts);
+          hasUnsavedInventory = false;
+          const saveBtn = document.getElementById('save-inv-btn');
+          if(saveBtn) saveBtn.classList.add('hidden');
 
           const orderData = {
             name: document.getElementById('ord-name').value,
@@ -807,7 +878,7 @@
             const oldOrder = orders.find(o => o.id === editingOrderId);
             orderData.date = oldOrder.date;
             orderData.timestamp = oldOrder.timestamp;
-            orderData.status = isChangingFromReturned ? 'pending' : oldOrder.status; // Reset status if it was returned
+            orderData.status = isChangingFromReturned ? 'pending' : oldOrder.status; 
             orderData.addedByPhone = oldOrder.addedByPhone || currentUser.phone;
             orderData.addedByName = oldOrder.addedByName || currentUser.name;
             orderData.addedByCode = oldOrder.addedByCode || currentUser.code;
@@ -838,13 +909,12 @@
       let prod = clonedProducts.find(p => p.id === order.productId) || clonedProducts.find(p => p.name === order.productName);
       let variant = prod ? prod.variants.find(v => v.name === order.variantName) : null;
       
-      // Stock logic for Returns
       if (newStatus === 'returned' && currentStatus !== 'returned') {
-        if(variant) variant.stock += parseInt(order.qty); // Restore stock
+        if(variant) variant.stock += parseInt(order.qty); 
       } else if (currentStatus === 'returned' && newStatus !== 'returned') {
         if(variant) {
           if (variant.stock < order.qty) { window.showToast('المخزون غير كافٍ لإرجاع حالة الأوردر!', true); window.renderOrders(); return; }
-          variant.stock -= parseInt(order.qty); // Deduct stock again
+          variant.stock -= parseInt(order.qty); 
         }
       }
 
