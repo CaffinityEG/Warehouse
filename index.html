@@ -6,6 +6,8 @@
   <title>Caffinity - نظام الإدارة</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- مكتبة SheetJS لتصدير الإكسيل متعدد التابات -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -92,12 +94,18 @@
       <section id="view-dashboard" class="block space-y-5 fade-in">
         <div class="flex justify-between items-center mb-2">
           <h2 class="text-lg font-black text-white">نظرة عامة</h2>
-          <select id="dash-time-filter" onchange="renderDashboard()" class="bg-coffee-900 border border-coffee-600 text-gold-400 text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none">
-            <option value="all">كل الأوقات</option>
-            <option value="today">اليوم</option>
-            <option value="month">الشهر الحالي</option>
-            <option value="year">السنة الحالية</option>
-          </select>
+          <div class="flex gap-2">
+            <!-- Export to Excel Button -->
+            <button id="export-excel-btn" onclick="window.exportToExcel()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-emerald-900/40 transition items-center gap-1">
+              شيت إكسيل 📊
+            </button>
+            <select id="dash-time-filter" onchange="renderDashboard()" class="bg-coffee-900 border border-coffee-600 text-gold-400 text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none">
+              <option value="all">كل الأوقات</option>
+              <option value="today">اليوم</option>
+              <option value="month">الشهر الحالي</option>
+              <option value="year">السنة الحالية</option>
+            </select>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -344,7 +352,7 @@
     let orderToDeleteId = null;
     let userToDeletePhone = null;
     let hasUnsavedInventory = false; 
-    let openOrderIds = new Set(); // لتتبع الأوردرات المفتوحة في الواجهة
+    let openOrderIds = new Set(); 
 
     let isInitialOrdersLoad = true;
     let knownOrderIds = new Set();
@@ -411,8 +419,12 @@
 
       if (currentUser.role === 'admin') {
         document.getElementById('tab-users').classList.replace('hidden', 'flex');
+        const exportBtn = document.getElementById('export-excel-btn');
+        if(exportBtn) exportBtn.classList.replace('hidden', 'flex');
       } else {
         document.getElementById('tab-users').classList.replace('flex', 'hidden');
+        const exportBtn = document.getElementById('export-excel-btn');
+        if(exportBtn) exportBtn.classList.replace('flex', 'hidden');
       }
       initApp();
       window.switchTab('dashboard');
@@ -500,6 +512,90 @@
         });
       }
     }
+
+    // --- Export to Excel Logic (SheetJS) ---
+    window.exportToExcel = function() {
+      if (currentUser.role !== 'admin') return;
+      window.showLoading();
+
+      try {
+        // 1. تجهيز بيانات الطلبات (Orders)
+        const ordersData = orders.map(o => {
+          const statusMap = { 'pending': 'تجهيز', 'shipped': 'شحن', 'delivered': 'توصيل', 'returned': 'مرتجع' };
+          return {
+            "رقم الأوردر": o.id,
+            "التاريخ": o.date || '',
+            "اسم العميل": o.name,
+            "رقم الموبايل": o.phone,
+            "المحافظة/العنوان": o.address,
+            "المنتج": o.productName,
+            "اللون/الموديل": o.variantName,
+            "الكمية": o.qty,
+            "سعر القطعة": o.price,
+            "مصاريف الشحن": o.shipping || 0,
+            "الإجمالي": (o.price * o.qty) + (o.shipping || 0),
+            "منفذ البيع": o.channel,
+            "الحالة": statusMap[o.status || 'pending'],
+            "بواسطة (كود الموظف)": o.addedByCode || ''
+          };
+        });
+
+        // 2. تجهيز بيانات المخزون (Inventory)
+        const invData = [];
+        products.forEach(p => {
+          if (p.variants) {
+            p.variants.forEach(v => {
+              invData.push({
+                "اسم المنتج": p.name,
+                "تكلفة المنتج": p.cost,
+                "اللون / الموديل": v.name,
+                "الكمية المتاحة": v.stock
+              });
+            });
+          }
+        });
+
+        // 3. تجهيز بيانات العملاء (Customers)
+        const customersMap = {};
+        orders.forEach(o => {
+          if(o.status === 'returned') return;
+          if (!customersMap[o.phone]) customersMap[o.phone] = { name: o.name, address: o.address, orders: 0, spent: 0 };
+          customersMap[o.phone].orders++;
+          if(o.status === 'delivered') customersMap[o.phone].spent += (o.price * o.qty) + (o.shipping || 0);
+        });
+        const custData = Object.entries(customersMap).map(([phone, data]) => ({
+          "اسم العميل": data.name,
+          "رقم الموبايل": phone,
+          "أخر عنوان": data.address,
+          "عدد الطلبات الإجمالية": data.orders,
+          "إجمالي المدفوعات (أرباح)": data.spent
+        }));
+
+        // إنشاء ملف الإكسيل والتابات
+        const wb = XLSX.utils.book_new();
+        
+        // تحويل البيانات إلى شيتات
+        const wsOrders = XLSX.utils.json_to_sheet(ordersData);
+        const wsInventory = XLSX.utils.json_to_sheet(invData);
+        const wsCustomers = XLSX.utils.json_to_sheet(custData);
+
+        // إضافة الشيتات للملف
+        XLSX.utils.book_append_sheet(wb, wsOrders, "سجل الطلبات");
+        XLSX.utils.book_append_sheet(wb, wsInventory, "المخزون الحالي");
+        XLSX.utils.book_append_sheet(wb, wsCustomers, "بيانات العملاء");
+
+        // تحميل الملف
+        const today = new Date().toLocaleDateString('ar-EG').replace(/\//g, '-');
+        XLSX.writeFile(wb, `Caffinity_Data_${today}.xlsx`);
+        
+        window.hideLoading();
+        window.showToast('تم تصدير الإكسيل بنجاح 📥');
+      } catch (error) {
+        console.error(error);
+        window.hideLoading();
+        window.showToast('حدث خطأ أثناء تصدير الإكسيل', true);
+      }
+    };
 
     // --- Dashboard & Performance Filters ---
     function getStartTime(filterId) {
@@ -668,6 +764,7 @@
       try {
         const oldRole = systemUsers[editingUserPhone].role;
         if (newPhone !== editingUserPhone) {
+          // التأكد أن الرقم الجديد غير مستخدم
           if (systemUsers[newPhone]) {
             window.hideLoading();
             window.showToast('رقم الموبايل الجديد مسجل بالفعل!', true);
@@ -676,6 +773,7 @@
           await set(ref(db, `users/${newPhone}`), { role: oldRole, name: newName, code: newCode });
           await remove(ref(db, `users/${editingUserPhone}`));
         } else {
+          // تحديث البيانات بدون تغيير الرقم
           await set(ref(db, `users/${editingUserPhone}`), { role: oldRole, name: newName, code: newCode });
         }
         window.hideLoading();
@@ -801,7 +899,7 @@
     };
 
     window.editOrder = function(orderId, event) {
-      if(event) event.stopPropagation(); // منع إغلاق أو فتح الكارت عند الضغط على زر التعديل
+      if(event) event.stopPropagation();
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
       editingOrderId = orderId;
@@ -899,7 +997,7 @@
     };
 
     window.updateOrderStatus = async function(orderId, newStatus, currentStatus, event) {
-      if(event) event.stopPropagation(); // منع إغلاق الكارت
+      if(event) event.stopPropagation(); 
       if(newStatus === currentStatus) return;
       
       const order = orders.find(o => o.id === orderId);
@@ -977,12 +1075,10 @@
       const arrowIcon = document.getElementById(`arrow-${orderId}`);
       
       if (openOrderIds.has(orderId)) {
-        // Close it
         detailsDiv.classList.add('hidden');
         arrowIcon.style.transform = 'rotate(0deg)';
         openOrderIds.delete(orderId);
       } else {
-        // Open it
         detailsDiv.classList.remove('hidden');
         arrowIcon.style.transform = 'rotate(180deg)';
         openOrderIds.add(orderId);
@@ -1013,7 +1109,6 @@
           <button onclick="window.confirmDelete('${o.id}', event)" class="flex-1 bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 text-xs font-bold px-3 py-2 rounded-lg transition shadow">مسح 🗑️</button>
         ` : '';
 
-        // Check if this order should be rendered as open
         const isDetailsOpen = openOrderIds.has(o.id);
         const detailsDisplayClass = isDetailsOpen ? '' : 'hidden';
         const arrowRotation = isDetailsOpen ? 'rotate(180deg)' : 'rotate(0deg)';
