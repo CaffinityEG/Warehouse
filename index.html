@@ -343,7 +343,8 @@
     let editingOrderId = null;
     let orderToDeleteId = null;
     let userToDeletePhone = null;
-    let hasUnsavedInventory = false; // متغير لمراقبة التعديلات اليدوية في المخزون
+    let hasUnsavedInventory = false; 
+    let openOrderIds = new Set(); // لتتبع الأوردرات المفتوحة في الواجهة
 
     let isInitialOrdersLoad = true;
     let knownOrderIds = new Set();
@@ -460,10 +461,7 @@
         if (snapshot.exists()) { products = snapshot.val(); } 
         else { set(ref(db, 'inventory'), defaultProducts); products = defaultProducts; }
         
-        // لا تقم بإعادة رسم المخزون إذا كان المدير يقوم بالتعديل حالياً ولم يحفظ بعد
-        if (!hasUnsavedInventory) {
-          window.renderInventory();
-        }
+        if (!hasUnsavedInventory) { window.renderInventory(); }
         window.populateProductSelect();
         if(document.getElementById('view-dashboard').classList.contains('block')) window.renderDashboard();
       });
@@ -701,7 +699,6 @@
           p.variants.forEach((v, vIndex) => {
             let isLow = v.stock < 5;
             
-            // إذا كان المستخدم مدير، نظهر أزرار الزيادة والنقصان وحقل الإدخال المباشر
             let stockControl = isAdmin ? `
               <div class="flex items-center gap-1.5" dir="ltr">
                 <button onclick="window.adjustStock(${pIndex}, ${vIndex}, -1)" class="w-8 h-8 rounded-lg bg-coffee-700 hover:bg-red-600/80 text-white font-black flex items-center justify-center transition border border-coffee-600 shadow active:scale-95 text-base">-</button>
@@ -789,20 +786,22 @@
       }
     };
 
-    // --- Orders CRUD ---
+    // --- Orders CRUD & UI ---
     window.openOrderModal = function() {
       editingOrderId = null;
       document.getElementById('order-modal-title').innerText = 'تسجيل أوردر جديد';
       document.getElementById('submit-order-btn').innerText = 'تأكيد وحفظ الأوردر';
       document.getElementById('order-modal').classList.replace('hidden', 'flex');
     };
+    
     window.closeOrderModal = function() {
       editingOrderId = null;
       document.getElementById('order-modal').classList.replace('flex', 'hidden');
       document.getElementById('add-order-form').reset();
     };
 
-    window.editOrder = function(orderId) {
+    window.editOrder = function(orderId, event) {
+      if(event) event.stopPropagation(); // منع إغلاق أو فتح الكارت عند الضغط على زر التعديل
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
       editingOrderId = orderId;
@@ -899,7 +898,8 @@
       }, 800);
     };
 
-    window.updateOrderStatus = async function(orderId, newStatus, currentStatus) {
+    window.updateOrderStatus = async function(orderId, newStatus, currentStatus, event) {
+      if(event) event.stopPropagation(); // منع إغلاق الكارت
       if(newStatus === currentStatus) return;
       
       const order = orders.find(o => o.id === orderId);
@@ -928,10 +928,12 @@
       } catch (e) { window.hideLoading(); window.showToast('خطأ أثناء التحديث', true); window.renderOrders(); }
     };
 
-    window.confirmDelete = function(orderId) {
+    window.confirmDelete = function(orderId, event) {
+      if(event) event.stopPropagation();
       orderToDeleteId = orderId;
       document.getElementById('confirm-modal').classList.replace('hidden', 'flex');
     };
+    
     window.cancelDelete = () => { orderToDeleteId = null; document.getElementById('confirm-modal').classList.replace('flex', 'hidden'); };
     
     window.executeDelete = async function() {
@@ -956,7 +958,8 @@
       } catch (error) { window.hideLoading(); window.showToast('خطأ أثناء المسح', true); }
     };
 
-    window.copyToBosta = function(orderId) {
+    window.copyToBosta = function(orderId, event) {
+      if(event) event.stopPropagation();
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
       const total = (order.price * order.qty) + order.shipping;
@@ -967,6 +970,23 @@
       try { document.execCommand('copy'); window.showToast('تم النسخ لبوسطة 📋'); } 
       catch (err) { window.showToast('فشل النسخ', true); }
       document.body.removeChild(textArea);
+    };
+
+    window.toggleOrderDetails = function(orderId) {
+      const detailsDiv = document.getElementById(`details-${orderId}`);
+      const arrowIcon = document.getElementById(`arrow-${orderId}`);
+      
+      if (openOrderIds.has(orderId)) {
+        // Close it
+        detailsDiv.classList.add('hidden');
+        arrowIcon.style.transform = 'rotate(0deg)';
+        openOrderIds.delete(orderId);
+      } else {
+        // Open it
+        detailsDiv.classList.remove('hidden');
+        arrowIcon.style.transform = 'rotate(180deg)';
+        openOrderIds.add(orderId);
+      }
     };
 
     window.renderOrders = function() {
@@ -989,47 +1009,65 @@
         if(status === 'returned') statusColor = 'bg-red-600 text-white';
         
         const actionButtons = isAdmin ? `
-          <button onclick="window.editOrder('${o.id}')" class="bg-coffee-700 hover:bg-gold-500 hover:text-coffee-900 text-gray-300 border border-coffee-600 text-xs font-bold px-3 py-2 rounded-lg transition">تعديل ✏️</button>
-          <button onclick="window.confirmDelete('${o.id}')" class="bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 text-xs font-bold px-3 py-2 rounded-lg transition">مسح 🗑️</button>
+          <button onclick="window.editOrder('${o.id}', event)" class="flex-1 bg-coffee-700 hover:bg-gold-500 hover:text-coffee-900 text-gray-300 border border-coffee-600 text-xs font-bold px-3 py-2 rounded-lg transition shadow">تعديل ✏️</button>
+          <button onclick="window.confirmDelete('${o.id}', event)" class="flex-1 bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 text-xs font-bold px-3 py-2 rounded-lg transition shadow">مسح 🗑️</button>
         ` : '';
 
+        // Check if this order should be rendered as open
+        const isDetailsOpen = openOrderIds.has(o.id);
+        const detailsDisplayClass = isDetailsOpen ? '' : 'hidden';
+        const arrowRotation = isDetailsOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+
         list.innerHTML += `
-          <div class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 shadow-md ${status === 'returned' ? 'opacity-70 grayscale-[30%]' : ''}">
-            <div class="flex justify-between items-start mb-3">
-              <div>
-                <span class="font-black text-white text-base block">${o.name}</span>
-                <span class="text-xs text-gold-400 font-mono" dir="ltr">${o.phone}</span>
+          <div class="bg-coffee-800 rounded-2xl border border-coffee-700 shadow-md ${status === 'returned' ? 'opacity-70 grayscale-[30%]' : ''} overflow-hidden">
+            
+            <!-- Compact Header (Clickable) -->
+            <div class="p-4 cursor-pointer hover:bg-coffee-900/40 transition" onclick="window.toggleOrderDetails('${o.id}')">
+              <div class="flex justify-between items-start mb-2 gap-2">
+                <div class="overflow-hidden">
+                  <span class="font-black text-white text-sm block truncate">${o.name}</span>
+                  <span class="text-xs text-gray-400 truncate block mt-0.5">${o.productName} <span class="text-gold-500 font-bold ml-1">x${o.qty}</span></span>
+                </div>
+                <div class="flex flex-col items-end shrink-0 gap-1.5">
+                  <span class="text-[10px] font-bold bg-coffee-900 text-gray-300 px-2 py-0.5 rounded border border-coffee-600">${o.channel}</span>
+                  <select onchange="window.updateOrderStatus('${o.id}', this.value, '${status}', event)" onclick="event.stopPropagation()" class="text-[10px] font-bold ${statusColor} rounded px-1 py-1 focus:outline-none cursor-pointer border-0 w-[70px]">
+                    <option value="pending" ${status === 'pending' ? 'selected' : ''} class="bg-coffee-800 text-white">⏳ تجهيز</option>
+                    <option value="shipped" ${status === 'shipped' ? 'selected' : ''} class="bg-coffee-800 text-white">🚚 شحن</option>
+                    <option value="delivered" ${status === 'delivered' ? 'selected' : ''} class="bg-coffee-800 text-white">✅ توصيل</option>
+                    <option value="returned" ${status === 'returned' ? 'selected' : ''} class="bg-coffee-800 text-red-400">❌ مرتجع</option>
+                  </select>
+                </div>
               </div>
-              <div class="flex flex-col items-end gap-1">
-                <span class="text-[10px] font-bold bg-coffee-900 text-gray-300 px-2 py-0.5 rounded-lg border border-coffee-600">${o.channel}</span>
-                <select onchange="window.updateOrderStatus('${o.id}', this.value, '${status}')" class="text-xs font-bold ${statusColor} rounded-md px-1 py-1 focus:outline-none cursor-pointer border-0 mt-1">
-                  <option value="pending" ${status === 'pending' ? 'selected' : ''} class="bg-coffee-800 text-white">⏳ تجهيز</option>
-                  <option value="shipped" ${status === 'shipped' ? 'selected' : ''} class="bg-coffee-800 text-white">🚚 شحن</option>
-                  <option value="delivered" ${status === 'delivered' ? 'selected' : ''} class="bg-coffee-800 text-white">✅ توصيل</option>
-                  <option value="returned" ${status === 'returned' ? 'selected' : ''} class="bg-coffee-800 text-red-400">❌ مرتجع</option>
-                </select>
+              <div class="flex justify-center items-center text-[10px] text-gray-500 font-bold mt-1">
+                <span id="arrow-${o.id}" style="transform: ${arrowRotation}; transition: transform 0.2s;">▼</span>
               </div>
             </div>
             
-            <p class="text-sm text-gray-300 mb-4 bg-coffee-900/50 p-2 rounded-lg border border-coffee-700/50">${o.address}</p>
-            
-            <div class="mb-4">
-              <div class="flex justify-between items-start mb-1 text-sm">
-                <span class="font-bold text-gold-500 truncate w-3/4">${o.productName}</span>
-                <span class="font-black text-white bg-coffee-700 px-2 rounded">x${o.qty}</span>
+            <!-- Expandable Details -->
+            <div id="details-${o.id}" class="${detailsDisplayClass} border-t border-coffee-700/50 p-4 bg-coffee-900/30">
+              <div class="flex justify-between items-center mb-3">
+                 <span class="text-xs text-gold-400 font-mono tracking-wider" dir="ltr">${o.phone}</span>
+                 <span class="text-[10px] text-gray-500">${o.date || ''}</span>
               </div>
-              <span class="text-xs text-gray-400 block mb-2">اللون: ${o.variantName}</span>
-              <div class="flex justify-between text-[10px] text-gray-400 font-semibold border-t border-coffee-700/50 pt-2">
-                <span>سعر القطعة: ${o.price}</span>
-                <span>الشحن: ${o.shipping}</span>
-                <span>بواسطة: ${o.addedByCode || 'N/A'}</span>
+              
+              <p class="text-xs text-gray-300 mb-4 bg-coffee-900 p-2 rounded-lg border border-coffee-700/50">${o.address}</p>
+              
+              <div class="mb-4">
+                <span class="text-xs text-gray-400 block mb-2">اللون/الموديل: <span class="text-gray-200 font-bold">${o.variantName}</span></span>
+                <div class="flex justify-between text-[10px] text-gray-400 font-semibold border-t border-coffee-700/50 pt-2">
+                  <span>سعر القطعة: ${o.price}</span>
+                  <span>الشحن: ${o.shipping}</span>
+                  <span>بواسطة: ${o.addedByCode || 'N/A'}</span>
+                </div>
               </div>
-            </div>
-            
-            <div class="flex justify-between items-center pt-3 border-t border-coffee-700 mt-2 gap-2 flex-wrap">
-              <span class="font-black ${status === 'returned' ? 'text-gray-500 line-through' : 'text-gold-500'} text-lg ml-auto">${itemTotal.toLocaleString('en-US')} <span class="text-[10px]">ج</span></span>
-              <button onclick="window.copyToBosta('${o.id}')" class="bg-coffee-700 hover:bg-coffee-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow">بوسطة 📋</button>
-              ${actionButtons}
+              
+              <div class="flex justify-between items-center pt-3 border-t border-coffee-700 gap-2 flex-wrap">
+                <span class="font-black ${status === 'returned' ? 'text-gray-500 line-through' : 'text-gold-500'} text-base ml-auto">${itemTotal.toLocaleString('en-US')} <span class="text-[10px]">ج</span></span>
+                <div class="flex gap-2 w-full mt-2">
+                   <button onclick="window.copyToBosta('${o.id}', event)" class="flex-1 bg-coffee-700 hover:bg-coffee-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow">نسخ לבوسطة 📋</button>
+                   ${actionButtons}
+                </div>
+              </div>
             </div>
           </div>`;
       });
