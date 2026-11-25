@@ -83,6 +83,7 @@
         <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-gold-500 text-coffee-900 transition flex items-center gap-1.5 shadow-md min-w-[90px]">📊 الرئيسية</button>
         <button onclick="switchTab('inventory')" id="tab-inventory" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">📦 المخزون</button>
         <button onclick="switchTab('orders')" id="tab-orders" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">🛍️ الطلبات</button>
+        <button onclick="switchTab('expenses')" id="tab-expenses" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center gap-1.5 hover:bg-coffee-700/50 min-w-[95px]">💸 المصروفات</button>
         <button onclick="switchTab('customers')" id="tab-customers" class="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition flex items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">👥 العملاء</button>
         <button onclick="switchTab('users')" id="tab-users" class="hidden flex-shrink-0 py-2 px-3 rounded-xl text-sm font-bold bg-transparent text-gray-400 transition items-center gap-1.5 hover:bg-coffee-700/50 min-w-[90px]">⚙️ الفريق</button>
       </div>
@@ -109,10 +110,14 @@
 
         <div class="grid grid-cols-2 gap-4">
           <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-4 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
-            <span class="text-gray-400 text-xs font-bold mb-2">إجمالي المبيعات (التي تم توصيلها)</span>
+            <span class="text-gray-400 text-xs font-bold mb-1">صافي الإيرادات (بعد المصروفات)</span>
             <div class="flex items-baseline gap-1">
               <span class="text-xl font-black text-white" id="dash-total-revenue">0</span>
               <span class="text-[10px] font-bold text-gold-500">ج.م</span>
+            </div>
+            <div class="text-[10px] text-gray-400 mt-1.5 pt-1.5 border-t border-coffee-600/40 flex flex-col gap-0.5">
+              <span>مبيعات: <span id="dash-gross-revenue" class="text-emerald-400 font-bold">0</span> ج</span>
+              <span>مصروفات: <span id="dash-total-expenses" class="text-red-400 font-bold">0</span> ج</span>
             </div>
           </div>
           <div class="bg-gradient-to-br from-coffee-800 to-coffee-700 p-4 rounded-2xl border border-coffee-600/50 shadow-lg relative overflow-hidden flex flex-col justify-center">
@@ -156,7 +161,51 @@
         <div id="orders-list" class="space-y-4 pb-6"></div>
       </section>
 
-      <!-- 4. CUSTOMERS VIEW -->
+      <!-- 4. EXPENSES VIEW -->
+      <section id="view-expenses" class="hidden fade-in">
+        <div class="mb-5">
+          <h2 class="text-xl font-black text-white mb-1">سجل المصروفات</h2>
+          <p class="text-xs text-gold-400/70 font-semibold">إضافة الإكراميات وميزانيات الإعلانات وخصمها من الإيرادات</p>
+        </div>
+
+        <form onsubmit="window.addExpense(event)" class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 mb-6 space-y-3 shadow-lg">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-gold-400/80 mb-1.5">نوع المصروف</label>
+              <select id="exp-type" onchange="window.toggleExpensePlatform()" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                <option value="إكراميات">إكراميات 💵</option>
+                <option value="إعلانات">إعلانات 📢</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gold-400/80 mb-1.5">المبلغ (ج.م)</label>
+              <input type="number" id="exp-amount" min="1" step="any" placeholder="0" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none text-center font-bold">
+            </div>
+          </div>
+
+          <div id="exp-platform-container" class="hidden">
+            <label class="block text-xs font-bold text-gold-400/80 mb-1.5">منصة الإعلانات</label>
+            <select id="exp-platform" class="w-full bg-coffee-900 border border-coffee-600 text-gold-400 font-bold rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+              <option value="فيس بوك">فيس بوك</option>
+              <option value="إنستجرام">إنستجرام</option>
+              <option value="تيك توك">تيك توك</option>
+              <option value="نون">نون</option>
+              <option value="أمازون">أمازون</option>
+              <option value="جوميا">جوميا</option>
+            </select>
+          </div>
+
+          <div>
+            <input type="text" id="exp-notes" placeholder="ملاحظات إضافية (اختياري)" class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+          </div>
+
+          <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-red-900/40 transition">تسجيل المصروف +</button>
+        </form>
+
+        <div id="expenses-list" class="space-y-3 pb-6"></div>
+      </section>
+
+      <!-- 5. CUSTOMERS VIEW -->
       <section id="view-customers" class="hidden fade-in">
         <div class="mb-5">
           <h2 class="text-xl font-black text-white mb-1">قاعدة العملاء</h2>
@@ -165,7 +214,7 @@
         <div id="customers-list" class="space-y-3 pb-6"></div>
       </section>
 
-      <!-- 5. USERS VIEW (Admin Only) -->
+      <!-- 6. USERS VIEW (Admin Only) -->
       <section id="view-users" class="hidden fade-in">
         <div class="mb-5">
           <h2 class="text-xl font-black text-white mb-1">فريق العمل</h2>
@@ -266,7 +315,7 @@
     <span id="toast-icon">✅</span> <span id="toast-msg">تمت العملية بنجاح</span>
   </div>
 
-  <!-- Delete Confirm Modal -->
+  <!-- Delete Order Confirm Modal -->
   <div id="confirm-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
     <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-red-900/50 text-center fade-in">
       <div class="w-16 h-16 bg-red-500/20 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 border border-red-500/30">⚠️</div>
@@ -275,6 +324,19 @@
       <div class="flex gap-3">
         <button onclick="window.cancelDelete()" class="flex-1 bg-coffee-700 hover:bg-coffee-600 text-white font-bold py-3 rounded-xl transition border border-coffee-600">إلغاء</button>
         <button onclick="window.executeDelete()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-red-900/50">نعم، امسح</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Expense Confirm Modal -->
+  <div id="expense-confirm-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
+    <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-red-900/50 text-center fade-in">
+      <div class="w-16 h-16 bg-red-500/20 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 border border-red-500/30">⚠️</div>
+      <h3 class="text-xl font-black text-white mb-2">مسح المصروف</h3>
+      <p class="text-gray-400 text-sm mb-6">هل أنت متأكد من حذف هذا المصروف؟ سيتم تعديل إجمالي الداش بورد تلقائياً.</p>
+      <div class="flex gap-3">
+        <button onclick="window.cancelDeleteExpense()" class="flex-1 bg-coffee-700 hover:bg-coffee-600 text-white font-bold py-3 rounded-xl transition border border-coffee-600">إلغاء</button>
+        <button onclick="window.executeDeleteExpense()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-red-900/50">نعم، امسح</button>
       </div>
     </div>
   </div>
@@ -361,9 +423,11 @@
 
     let products = [];
     let orders = [];
+    let expenses = [];
     let systemUsers = {};
     let editingOrderId = null;
     let orderToDeleteId = null;
+    let expenseToDeleteId = null;
     let userToDeletePhone = null;
     let hasUnsavedInventory = false; 
     let openOrderIds = new Set(); 
@@ -456,7 +520,7 @@
     };
 
     // --- Navigation Tabs ---
-    const tabs = ['dashboard', 'inventory', 'orders', 'customers', 'users'];
+    const tabs = ['dashboard', 'inventory', 'orders', 'expenses', 'customers', 'users'];
     window.switchTab = function(activeTab) {
       tabs.forEach(tab => {
         const view = document.getElementById(`view-${tab}`);
@@ -477,6 +541,7 @@
       if(activeTab === 'dashboard') window.renderDashboard();
       if(activeTab === 'inventory') window.renderInventory();
       if(activeTab === 'orders') window.renderOrders();
+      if(activeTab === 'expenses') window.renderExpenses();
       if(activeTab === 'customers') window.renderCustomers();
       if(activeTab === 'users' && currentUser.role === 'admin') window.renderUsers();
     };
@@ -517,6 +582,18 @@
         if(document.getElementById('view-customers').classList.contains('block')) window.renderCustomers();
       });
 
+      onValue(ref(db, 'expenses'), (snapshot) => {
+        expenses = [];
+        if (snapshot.exists()) {
+          snapshot.forEach((child) => {
+            expenses.push({ id: child.key, ...child.val() });
+          });
+          expenses.reverse();
+        }
+        if(document.getElementById('view-expenses').classList.contains('block')) window.renderExpenses();
+        if(document.getElementById('view-dashboard').classList.contains('block')) window.renderDashboard();
+      });
+
       if (currentUser.role === 'admin') {
         onValue(ref(db, 'users'), (snapshot) => {
           if (snapshot.exists()) {
@@ -533,6 +610,7 @@
       window.showLoading();
 
       try {
+        // 1. تجهيز بيانات الطلبات
         const ordersData = orders.map(o => {
           const statusMap = { 'pending': 'تجهيز', 'shipped': 'شحن', 'delivered': 'توصيل', 'returned': 'مرتجع' };
           return {
@@ -553,6 +631,7 @@
           };
         });
 
+        // 2. تجهيز بيانات المخزون
         const invData = [];
         products.forEach(p => {
           if (p.variants) {
@@ -567,6 +646,7 @@
           }
         });
 
+        // 3. تجهيز بيانات العملاء
         const customersMap = {};
         orders.forEach(o => {
           if(o.status === 'returned') return;
@@ -582,19 +662,33 @@
           "إجمالي المدفوعات (أرباح)": data.spent
         }));
 
+        // 4. تجهيز بيانات المصروفات
+        const expData = expenses.map(e => ({
+          "رقم المصروف": e.id,
+          "التاريخ": e.date || '',
+          "نوع المصروف": e.type,
+          "منصة الإعلانات": e.type === 'إعلانات' ? (e.platform || '-') : '-',
+          "المبلغ (ج.م)": e.amount,
+          "ملاحظات": e.notes || '',
+          "بواسطة (كود الموظف)": e.addedByCode || ''
+        }));
+
         const wb = XLSX.utils.book_new();
         
         const wsOrders = XLSX.utils.json_to_sheet(ordersData);
         const wsInventory = XLSX.utils.json_to_sheet(invData);
         const wsCustomers = XLSX.utils.json_to_sheet(custData);
+        const wsExpenses = XLSX.utils.json_to_sheet(expData);
 
         wsOrders['!dir'] = 'rtl';
         wsInventory['!dir'] = 'rtl';
         wsCustomers['!dir'] = 'rtl';
+        wsExpenses['!dir'] = 'rtl';
 
         XLSX.utils.book_append_sheet(wb, wsOrders, "سجل الطلبات");
         XLSX.utils.book_append_sheet(wb, wsInventory, "المخزون الحالي");
         XLSX.utils.book_append_sheet(wb, wsCustomers, "بيانات العملاء");
+        XLSX.utils.book_append_sheet(wb, wsExpenses, "سجل المصروفات");
 
         const today = new Date().toLocaleDateString('ar-EG').replace(/\//g, '-');
         XLSX.writeFile(wb, `Caffinity_Data_${today}.xlsx`);
@@ -621,19 +715,32 @@
     window.renderDashboard = function() {
       const startTime = getStartTime('dash-time-filter');
       const filteredOrders = startTime > 0 ? orders.filter(o => o.timestamp && o.timestamp >= startTime) : orders;
+      const filteredExpenses = startTime > 0 ? expenses.filter(e => e.timestamp && e.timestamp >= startTime) : expenses;
 
       let validOrdersCount = 0;
-      let totalRevenue = 0;
+      let grossRevenue = 0;
+      let totalExpenses = 0;
       
       filteredOrders.forEach(o => { 
         if (o.status !== 'returned') {
           validOrdersCount++;
-          if(o.status === 'delivered') totalRevenue += (o.price * o.qty) + (o.shipping || 0);
+          if(o.status === 'delivered') grossRevenue += (o.price * o.qty) + (o.shipping || 0);
         }
       });
+
+      filteredExpenses.forEach(e => {
+        totalExpenses += parseFloat(e.amount) || 0;
+      });
+
+      const netRevenue = grossRevenue - totalExpenses;
       
       document.getElementById('dash-total-orders').innerText = validOrdersCount;
-      document.getElementById('dash-total-revenue').innerText = totalRevenue.toLocaleString('en-US');
+      document.getElementById('dash-gross-revenue').innerText = grossRevenue.toLocaleString('en-US');
+      document.getElementById('dash-total-expenses').innerText = totalExpenses.toLocaleString('en-US');
+      
+      const netRevEl = document.getElementById('dash-total-revenue');
+      netRevEl.innerText = netRevenue.toLocaleString('en-US');
+      netRevEl.className = `text-xl font-black ${netRevenue < 0 ? 'text-red-400' : 'text-white'}`;
 
       const lowStockContainer = document.getElementById('dash-low-stock');
       lowStockContainer.innerHTML = '';
@@ -653,6 +760,128 @@
       });
       if (!hasLowStock) lowStockContainer.innerHTML = `<div class="text-gold-500 text-sm font-bold p-2 text-center bg-coffee-900/30 rounded-xl">المخزون آمن حالياً ✨</div>`;
     }
+
+    // --- Expenses Management ---
+    window.toggleExpensePlatform = function() {
+      const type = document.getElementById('exp-type').value;
+      const platformContainer = document.getElementById('exp-platform-container');
+      if (type === 'إعلانات') {
+        platformContainer.classList.remove('hidden');
+      } else {
+        platformContainer.classList.add('hidden');
+      }
+    };
+
+    window.addExpense = async function(e) {
+      e.preventDefault();
+      const type = document.getElementById('exp-type').value;
+      const amount = parseFloat(document.getElementById('exp-amount').value);
+      const platform = type === 'إعلانات' ? document.getElementById('exp-platform').value : '';
+      const notes = document.getElementById('exp-notes').value.trim();
+
+      if (isNaN(amount) || amount <= 0) {
+        window.showToast('يرجى إدخال مبلغ صحيح', true);
+        return;
+      }
+
+      window.showLoading();
+      window.isLocalAction = true;
+
+      try {
+        const expenseData = {
+          type,
+          platform,
+          amount,
+          notes,
+          date: new Date().toLocaleDateString('ar-EG'),
+          timestamp: new Date().getTime(),
+          addedByPhone: currentUser.phone,
+          addedByName: currentUser.name,
+          addedByCode: currentUser.code
+        };
+
+        await push(ref(db, 'expenses'), expenseData);
+        document.getElementById('exp-amount').value = '';
+        document.getElementById('exp-notes').value = '';
+        document.getElementById('exp-type').value = 'إكراميات';
+        window.toggleExpensePlatform();
+        window.hideLoading();
+        window.showToast('تم تسجيل المصروف بنجاح 💸');
+      } catch (err) {
+        window.hideLoading();
+        window.showToast('خطأ أثناء تسجيل المصروف', true);
+      }
+    };
+
+    window.confirmDeleteExpense = function(expId) {
+      expenseToDeleteId = expId;
+      document.getElementById('expense-confirm-modal').classList.replace('hidden', 'flex');
+    };
+
+    window.cancelDeleteExpense = function() {
+      expenseToDeleteId = null;
+      document.getElementById('expense-confirm-modal').classList.replace('flex', 'hidden');
+    };
+
+    window.executeDeleteExpense = async function() {
+      if (!expenseToDeleteId) return;
+      const id = expenseToDeleteId;
+      window.cancelDeleteExpense();
+      window.showLoading();
+      window.isLocalAction = true;
+
+      try {
+        await remove(ref(db, `expenses/${id}`));
+        window.hideLoading();
+        window.showToast('تم مسح المصروف بنجاح 🗑️');
+      } catch (err) {
+        window.hideLoading();
+        window.showToast('خطأ أثناء المسح', true);
+      }
+    };
+
+    window.renderExpenses = function() {
+      const list = document.getElementById('expenses-list');
+      if (expenses.length === 0) {
+        list.innerHTML = '<div class="text-center py-12 text-coffee-600 font-bold text-sm">لا توجد مصروفات مسجلة 💸</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      const isAdmin = currentUser.role === 'admin';
+
+      expenses.forEach(exp => {
+        const isAd = exp.type === 'إعلانات';
+        const icon = isAd ? '📢' : '💵';
+        const badgeHTML = isAd
+          ? `<span class="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded">${exp.platform}</span>`
+          : `<span class="text-[10px] font-bold bg-gold-500/20 text-gold-400 border border-gold-500/30 px-2 py-0.5 rounded">إكراميات</span>`;
+
+        const deleteBtn = isAdmin
+          ? `<button onclick="window.confirmDeleteExpense('${exp.id}')" class="text-xs bg-red-900/30 text-red-400 border border-red-900/50 px-2.5 py-1 rounded-lg hover:bg-red-600 hover:text-white transition">حذف 🗑️</button>`
+          : '';
+
+        list.innerHTML += `
+          <div class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 shadow-md flex justify-between items-center gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-black text-white text-sm">${icon} ${exp.type}</span>
+                ${badgeHTML}
+              </div>
+              ${exp.notes ? `<p class="text-xs text-gray-300">${exp.notes}</p>` : ''}
+              <div class="text-[10px] text-gray-400 flex items-center gap-2">
+                <span>${exp.date || ''}</span>
+                <span>•</span>
+                <span>بواسطة: ${exp.addedByCode || 'N/A'}</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-2 shrink-0">
+              <span class="font-black text-red-400 text-base">-${parseFloat(exp.amount).toLocaleString('en-US')} <span class="text-[10px]">ج</span></span>
+              ${deleteBtn}
+            </div>
+          </div>`;
+      });
+    };
 
     window.renderCustomers = function() {
       const customersMap = {};
@@ -780,7 +1009,6 @@
       phoneInput.value = phone;
       roleSelect.value = user.role || 'staff';
 
-      // حماية حساب المدير الأساسي من تغيير رقمه أو صلاحيته
       if (phone === mainAdminPhone) {
         phoneInput.disabled = true;
         roleSelect.disabled = true;
@@ -820,7 +1048,6 @@
           await set(ref(db, `users/${editingUserPhone}`), { role: newRole, name: newName, code: newCode });
         }
 
-        // تحديث شارة المستخدم الحالي في الهيدر لو عدّل بياناته الشخصية
         if (editingUserPhone === currentUser.phone) {
           currentUser.phone = newPhone;
           currentUser.name = newName;
