@@ -31,7 +31,6 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #d97706; border-radius: 10px; }
     .fade-in { animation: fadeIn 0.3s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    /* إخفاء أسهم حقل الأرقام لتصميم أنظف */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
@@ -96,7 +95,6 @@
         <div class="flex justify-between items-center mb-2">
           <h2 class="text-lg font-black text-white">نظرة عامة</h2>
           <div class="flex gap-2">
-            <!-- Export to Excel Button -->
             <button id="export-excel-btn" onclick="window.exportToExcel()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-emerald-900/40 transition items-center gap-1">
               شيت إكسيل 📊
             </button>
@@ -171,15 +169,21 @@
       <section id="view-users" class="hidden fade-in">
         <div class="mb-5">
           <h2 class="text-xl font-black text-white mb-1">فريق العمل</h2>
-          <p class="text-xs text-gold-400/70 font-semibold">إضافة الموظفين وتحديد أكوادهم</p>
+          <p class="text-xs text-gold-400/70 font-semibold">إضافة الأفراد وتحديد صلاحياتهم (أدمن أو موظف)</p>
         </div>
-        <form onsubmit="addUser(event)" class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 mb-6 space-y-3">
-          <input type="text" id="new-user-name" placeholder="اسم الموظف (مثال: أحمد)" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+        <form onsubmit="addUser(event)" class="bg-coffee-800 p-4 rounded-2xl border border-coffee-700 mb-6 space-y-3 shadow-lg">
+          <div class="flex gap-2">
+            <input type="text" id="new-user-name" placeholder="اسم الفرد (مثال: أحمد)" required class="w-2/3 bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+            <select id="new-user-role" required class="w-1/3 bg-coffee-900 border border-coffee-600 text-gold-400 font-bold rounded-xl px-2 py-2.5 text-sm focus:border-gold-500 focus:outline-none text-center">
+              <option value="staff">موظف 👤</option>
+              <option value="admin">أدمن 👑</option>
+            </select>
+          </div>
           <div class="flex gap-2">
             <input type="text" id="new-user-code" placeholder="الكود (مثال: M1)" required class="w-1/3 bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none text-center">
             <input type="tel" id="new-user-phone" placeholder="رقم الموبايل" required class="w-2/3 bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-2.5 text-sm focus:border-gold-500 focus:outline-none text-left" dir="ltr">
           </div>
-          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg transition">إضافة الموظف</button>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg transition">إضافة للفريق +</button>
         </form>
         <div class="bg-coffee-800 rounded-2xl border border-coffee-700 shadow-md overflow-hidden">
           <div class="px-4 py-3 bg-coffee-900/50 border-b border-coffee-700 font-bold text-sm text-gold-400">قائمة الصلاحيات</div>
@@ -279,8 +283,8 @@
   <div id="user-action-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
     <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-red-900/50 text-center fade-in">
       <div class="w-16 h-16 bg-red-500/20 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 border border-red-500/30">⚠️</div>
-      <h3 class="text-xl font-black text-white mb-2">حذف موظف</h3>
-      <p class="text-gray-400 text-sm mb-6">هل أنت متأكد من حذف هذا الموظف نهائياً؟</p>
+      <h3 class="text-xl font-black text-white mb-2">حذف فرد من الفريق</h3>
+      <p class="text-gray-400 text-sm mb-6">هل أنت متأكد من حذف هذا العضو نهائياً؟</p>
       <div class="flex gap-3">
         <button onclick="window.closeUserModal()" class="flex-1 bg-coffee-700 hover:bg-coffee-600 text-white font-bold py-3 rounded-xl transition border border-coffee-600">إلغاء</button>
         <button onclick="window.executeDeleteUser()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-red-900/50">نعم، احذف</button>
@@ -291,11 +295,20 @@
   <!-- Edit User Modal -->
   <div id="edit-user-modal" class="fixed inset-0 z-[100] bg-coffee-900/90 backdrop-blur-sm hidden flex-col justify-center items-center transition-opacity p-6">
     <div class="bg-coffee-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-coffee-700 fade-in">
-      <h3 class="text-xl font-black text-white mb-4">تعديل بيانات الموظف</h3>
+      <h3 class="text-xl font-black text-white mb-4">تعديل بيانات العضو</h3>
       <form id="edit-user-form" onsubmit="window.submitEditUser(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-gray-400 mb-1.5">اسم الموظف</label>
-          <input type="text" id="edit-user-name" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none">
+        <div class="flex gap-2">
+          <div class="w-2/3">
+            <label class="block text-xs font-bold text-gray-400 mb-1.5">الاسم</label>
+            <input type="text" id="edit-user-name" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none">
+          </div>
+          <div class="w-1/3">
+            <label class="block text-xs font-bold text-gray-400 mb-1.5">الصلاحية</label>
+            <select id="edit-user-role" required class="w-full bg-coffee-900 border border-coffee-600 text-gold-400 font-bold rounded-xl px-2 py-3 text-sm focus:border-gold-500 focus:outline-none text-center disabled:opacity-50">
+              <option value="staff">موظف 👤</option>
+              <option value="admin">أدمن 👑</option>
+            </select>
+          </div>
         </div>
         <div class="flex gap-2">
           <div class="w-1/3">
@@ -304,7 +317,7 @@
           </div>
           <div class="w-2/3">
             <label class="block text-xs font-bold text-gray-400 mb-1.5">رقم الموبايل</label>
-            <input type="tel" id="edit-user-phone" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-left" dir="ltr">
+            <input type="tel" id="edit-user-phone" required class="w-full bg-coffee-900 border border-coffee-600 text-white rounded-xl px-3 py-3 text-sm focus:border-gold-500 focus:outline-none text-left disabled:opacity-50" dir="ltr">
           </div>
         </div>
         <div class="flex gap-3 pt-2">
@@ -520,7 +533,6 @@
       window.showLoading();
 
       try {
-        // 1. تجهيز بيانات الطلبات
         const ordersData = orders.map(o => {
           const statusMap = { 'pending': 'تجهيز', 'shipped': 'شحن', 'delivered': 'توصيل', 'returned': 'مرتجع' };
           return {
@@ -541,7 +553,6 @@
           };
         });
 
-        // 2. تجهيز بيانات المخزون
         const invData = [];
         products.forEach(p => {
           if (p.variants) {
@@ -556,7 +567,6 @@
           }
         });
 
-        // 3. تجهيز بيانات العملاء
         const customersMap = {};
         orders.forEach(o => {
           if(o.status === 'returned') return;
@@ -578,7 +588,6 @@
         const wsInventory = XLSX.utils.json_to_sheet(invData);
         const wsCustomers = XLSX.utils.json_to_sheet(custData);
 
-        // جعل اتجاه الشيتات من اليمين لليسار (RTL) 
         wsOrders['!dir'] = 'rtl';
         wsInventory['!dir'] = 'rtl';
         wsCustomers['!dir'] = 'rtl';
@@ -678,16 +687,32 @@
       const list = document.getElementById('users-list');
       list.innerHTML = '';
       for (const [phone, data] of Object.entries(systemUsers)) {
+        const displayName = data.name || (phone === mainAdminPhone ? 'المدير العام' : 'غير محدد');
+        const displayCode = data.code || (phone === mainAdminPhone ? 'M1' : 'N/A');
+        const isUserAdmin = data.role === 'admin';
+        
+        const roleBadge = isUserAdmin
+          ? `<span class="text-[10px] font-bold bg-gold-500/20 text-gold-400 border border-gold-500/30 px-2 py-0.5 rounded-md">مدير 👑</span>`
+          : `<span class="text-[10px] font-bold bg-coffee-700/80 text-gray-300 border border-coffee-600 px-2 py-0.5 rounded-md">موظف 👤</span>`;
+
+        const deleteBtn = phone !== mainAdminPhone
+          ? `<button onclick="window.promptDeleteUser('${phone}')" class="text-xs bg-red-900/30 text-red-400 border border-red-900/50 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition shadow">حذف 🗑️</button>`
+          : '';
+
         list.innerHTML += `
-          <div class="p-4 flex justify-between items-center">
+          <div class="p-4 flex justify-between items-center gap-2">
             <div>
-              <div class="font-bold text-gray-200 text-sm">${data.name} <span class="text-[10px] bg-coffee-900 border border-coffee-700 px-1 rounded ml-1 text-gold-400">${data.code}</span></div>
-              <div class="text-xs text-gray-400 font-mono" dir="ltr">${phone} - ${data.role === 'admin'?'مدير':'موظف'}</div>
+              <div class="font-bold text-gray-200 text-sm flex items-center gap-1.5 flex-wrap">
+                <span>${displayName}</span>
+                <span class="text-[10px] bg-coffee-900 border border-coffee-700 px-1.5 py-0.5 rounded text-gold-400 font-mono">${displayCode}</span>
+                ${roleBadge}
+              </div>
+              <div class="text-xs text-gray-400 font-mono mt-1" dir="ltr">${phone}</div>
             </div>
-            ${phone !== mainAdminPhone ? `<div class="flex gap-2">
+            <div class="flex gap-2 shrink-0">
               <button onclick="window.openEditUserModal('${phone}')" class="text-xs bg-coffee-700 text-gray-300 border border-coffee-600 px-3 py-1.5 rounded-lg hover:bg-gold-500 hover:text-coffee-900 transition shadow">تعديل ✏️</button>
-              <button onclick="window.promptDeleteUser('${phone}')" class="text-xs bg-red-900/30 text-red-400 border border-red-900/50 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition shadow">حذف 🗑️</button>
-            </div>` : ''}
+              ${deleteBtn}
+            </div>
           </div>`;
       }
     }
@@ -697,16 +722,19 @@
       const phone = document.getElementById('new-user-phone').value.trim();
       const name = document.getElementById('new-user-name').value.trim();
       const code = document.getElementById('new-user-code').value.trim();
+      const role = document.getElementById('new-user-role').value;
+      
       if(systemUsers[phone]) { window.showToast('رقم الموبايل موجود بالفعل', true); return; }
       
       window.showLoading();
       try {
-        await set(ref(db, `users/${phone}`), { role: 'staff', name, code });
+        await set(ref(db, `users/${phone}`), { role, name, code });
         document.getElementById('new-user-phone').value = '';
         document.getElementById('new-user-name').value = '';
         document.getElementById('new-user-code').value = '';
+        document.getElementById('new-user-role').value = 'staff';
         window.hideLoading();
-        window.showToast('تمت إضافة الموظف بنجاح');
+        window.showToast(role === 'admin' ? 'تمت إضافة الأدمن بنجاح 👑' : 'تمت إضافة الموظف بنجاح 👤');
       } catch (err) { window.hideLoading(); window.showToast('خطأ أثناء الإضافة', true); }
     };
 
@@ -730,7 +758,7 @@
       try {
         await remove(ref(db, `users/${phoneToDelete}`));
         window.hideLoading();
-        window.showToast('تم حذف الموظف بنجاح 🗑️');
+        window.showToast('تم حذف العضو بنجاح 🗑️');
       } catch (err) { 
         window.hideLoading(); 
         window.showToast('خطأ أثناء الحذف', true); 
@@ -743,9 +771,24 @@
       const user = systemUsers[phone];
       if (!user) return;
       editingUserPhone = phone;
-      document.getElementById('edit-user-name').value = user.name || '';
-      document.getElementById('edit-user-code').value = user.code || '';
-      document.getElementById('edit-user-phone').value = phone;
+      document.getElementById('edit-user-name').value = user.name || (phone === mainAdminPhone ? 'المدير العام' : '');
+      document.getElementById('edit-user-code').value = user.code || (phone === mainAdminPhone ? 'M1' : '');
+      
+      const phoneInput = document.getElementById('edit-user-phone');
+      const roleSelect = document.getElementById('edit-user-role');
+      
+      phoneInput.value = phone;
+      roleSelect.value = user.role || 'staff';
+
+      // حماية حساب المدير الأساسي من تغيير رقمه أو صلاحيته
+      if (phone === mainAdminPhone) {
+        phoneInput.disabled = true;
+        roleSelect.disabled = true;
+      } else {
+        phoneInput.disabled = false;
+        roleSelect.disabled = false;
+      }
+
       document.getElementById('edit-user-modal').classList.replace('hidden', 'flex');
     }
 
@@ -760,24 +803,35 @@
 
       const newName = document.getElementById('edit-user-name').value.trim();
       const newCode = document.getElementById('edit-user-code').value.trim();
-      const newPhone = document.getElementById('edit-user-phone').value.trim();
+      const newPhone = editingUserPhone === mainAdminPhone ? mainAdminPhone : document.getElementById('edit-user-phone').value.trim();
+      const newRole = editingUserPhone === mainAdminPhone ? 'admin' : document.getElementById('edit-user-role').value;
       
       window.showLoading();
       try {
-        const oldRole = systemUsers[editingUserPhone].role;
         if (newPhone !== editingUserPhone) {
           if (systemUsers[newPhone]) {
             window.hideLoading();
             window.showToast('رقم الموبايل الجديد مسجل بالفعل!', true);
             return;
           }
-          await set(ref(db, `users/${newPhone}`), { role: oldRole, name: newName, code: newCode });
+          await set(ref(db, `users/${newPhone}`), { role: newRole, name: newName, code: newCode });
           await remove(ref(db, `users/${editingUserPhone}`));
         } else {
-          await set(ref(db, `users/${editingUserPhone}`), { role: oldRole, name: newName, code: newCode });
+          await set(ref(db, `users/${editingUserPhone}`), { role: newRole, name: newName, code: newCode });
         }
+
+        // تحديث شارة المستخدم الحالي في الهيدر لو عدّل بياناته الشخصية
+        if (editingUserPhone === currentUser.phone) {
+          currentUser.phone = newPhone;
+          currentUser.name = newName;
+          currentUser.code = newCode;
+          currentUser.role = newRole;
+          const badge = document.getElementById('user-badge');
+          badge.innerText = currentUser.role === 'admin' ? `Admin 👑 (${currentUser.name})` : `Staff 👤 (${currentUser.name})`;
+        }
+
         window.hideLoading();
-        window.showToast('تم تعديل بيانات الموظف بنجاح ✨');
+        window.showToast('تم تعديل البيانات بنجاح ✨');
         window.closeEditUserModal();
       } catch (err) {
         window.hideLoading();
@@ -1115,7 +1169,6 @@
         list.innerHTML += `
           <div class="bg-coffee-800 rounded-2xl border border-coffee-700 shadow-md ${status === 'returned' ? 'opacity-70 grayscale-[30%]' : ''} overflow-hidden">
             
-            <!-- Compact Header (Clickable) -->
             <div class="p-4 cursor-pointer hover:bg-coffee-900/40 transition" onclick="window.toggleOrderDetails('${o.id}')">
               <div class="flex justify-between items-start mb-2 gap-2">
                 <div class="overflow-hidden">
@@ -1137,7 +1190,6 @@
               </div>
             </div>
             
-            <!-- Expandable Details -->
             <div id="details-${o.id}" class="${detailsDisplayClass} border-t border-coffee-700/50 p-4 bg-coffee-900/30">
               <div class="flex justify-between items-center mb-3">
                  <span class="text-xs text-gold-400 font-mono tracking-wider" dir="ltr">${o.phone}</span>
